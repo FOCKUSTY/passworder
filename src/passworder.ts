@@ -9,7 +9,26 @@ import { readFile, writeFile } from "fs/promises";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-import { FILE_NAME, STATUSES } from "./constants";
+import { FILE_NAME, LATEST_PASSWORD_FILE, STATUSES, TYPES } from "./constants";
+
+type WatchServiceResponse = ({
+  successed: true,
+  type: typeof TYPES.PASSWORD_GET,
+  password: string
+} | {
+  successed: false,
+  type: typeof TYPES.PASSWORD_CREATE,
+  execute: (pass: string|true) => unknown
+} | {
+  successed: false,
+  type: typeof TYPES.PASSWORD_OVERRIDE
+} | {
+  successed: true,
+  type: typeof TYPES.PASSWORD_OVERRIDE
+} | {
+  successed: true,
+  type: typeof TYPES.PASSWORD_CREATE
+})
 
 export class Passworder {
   public static encrypt(key: string, salt: string, text: string) {
@@ -37,6 +56,10 @@ export class Passworder {
     return decrypted;
   }
 
+  public static generatePassword() {
+    return randomBytes(20).toString("hex");
+  }
+
   public static async readFile() {
     return readFile(join(".", FILE_NAME), "utf-8");
   }
@@ -46,6 +69,10 @@ export class Passworder {
       global: global,
       passwords: {}
     }));
+  }
+
+  public static writePassword(password: string) {
+    return writeFile(join(".", LATEST_PASSWORD_FILE), password);
   }
 
   private _file: {
@@ -78,16 +105,69 @@ export class Passworder {
     await this.writeFile(this._file);
   }
 
-  public async addService(service: string, password: string) {
-    if (!this._file.global) throw new Error("Global key is null");
+  public async addService(service: string, password: string|true) {
+    if (!this._file.global) throw new Error("Global key is null.");
 
-    const encrypted = Passworder.encrypt(this._file.global, this.login, password);
+    const encrypted = password !== true
+      ? Passworder.encrypt(this._file.global, this.login, password)
+      : Passworder.generatePassword();
 
     this._file.passwords[this.login][service] = encrypted;
 
     await this.writeFile(this._file);
 
     return this._file;
+  }
+
+  public async watchService(service: string, password?: string): Promise<WatchServiceResponse> {
+    if (!this._file.global) throw new Error("Global key is null.");
+    
+    if (!password) {
+      const servicePassword = this._file.passwords[this.login][service];
+      if (servicePassword) {
+        if (!await this.validateGlobalKey(this._file.global)) throw new Error("Bad global key.");
+
+        return {
+          successed: true,
+          type: TYPES.PASSWORD_GET,
+          password: Passworder.decrypt(this._file.global, this.login, servicePassword)
+        }
+      };
+
+      return {
+        successed: false,
+        type: TYPES.PASSWORD_CREATE,
+        execute: (pass: string|true) => {
+          if (!this._file.global) throw new Error("Global key is null.");
+
+          return this.addService(service, pass);
+        }
+      };
+    }
+
+    const servicePassword = this._file.passwords[this.login][service];
+    if (servicePassword) {
+      const decryptedServicePassword = Passworder.decrypt(this._file.global, this.login, servicePassword);
+      
+      if (decryptedServicePassword !== password) {
+        return {
+          successed: false,
+          type: TYPES.PASSWORD_OVERRIDE
+        }
+      };
+
+      return {
+        successed: true,
+        type: TYPES.PASSWORD_OVERRIDE
+      }
+    }
+
+    this.addService(service, password);
+    
+    return {
+      successed: true,
+      type: TYPES.PASSWORD_CREATE
+    }
   }
 
   public async getFileStatus() {

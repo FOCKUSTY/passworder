@@ -1,7 +1,14 @@
 export const PROGRAM_NAME = "passworder";
 export const FILE_NAME = ".passworder";
+export const LATEST_PASSWORD_FILE = "latest-password" + FILE_NAME;
 
 export const STATUSES = {
   alreadyCreated: "Already created.",
   createdNow: "Created now."
-}
+} as const;
+
+export const TYPES = {
+  PASSWORD_CREATE: "PASSWORD CREATE",
+  PASSWORD_GET: "PASSWORD GET",
+  PASSWORD_OVERRIDE: "PASSWORD OVERRIDE"
+} as const;

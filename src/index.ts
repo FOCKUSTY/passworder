@@ -1,4 +1,4 @@
-import { PROGRAM_NAME } from "./constants";
+import { LATEST_PASSWORD_FILE, PROGRAM_NAME, TYPES } from "./constants";
 
 import Terminal from "./terminal";
 import Passworder from "./passworder";
@@ -27,7 +27,75 @@ const checkFileStatus = (passworder: Passworder) => {
   terminal.clear();
   terminal.print("Мы сохранили Ваши данные");
   
-  terminal.print("На этом наша программа пока что всё. Приходите позже и увидите новые обновления!")
+  const askService = async (end?: boolean) => {
+    if (end === false) { 
+      terminal.print("Спасибо, что используете " + PROGRAM_NAME);
+      terminal.print("Пока-пока!");
+      return terminal.close();
+    }
 
-  // const service = terminal.ask("Какой сервис Вы хотите посмотреть? ");
+    const service = await terminal.ask("Какой сервис Вы хотите посмотреть? ");
+  
+    const response = await passworder.watchService(service);
+    
+    if (response.type === TYPES.PASSWORD_GET) {
+      if (response.successed) {
+        terminal.print("Удалось получится пароль, ура!");
+        terminal.print("Держите его, и никому не показывайте!");
+
+        const showPassword = await terminal.ask("Показать пароль? (Y/N) ");
+        
+        if (showPassword === "Y") {
+          terminal.print("Держите Ваш пароль: " + response.password);
+          terminal.print("Мы очистим терминал через 5 секунд, копируйте быстрее!");
+
+          await new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(terminal.clear());
+            }, 5 * 1000);
+          });
+
+          terminal.print("Надеемся, что Вы успели скопировать пароль!");
+          terminal.print("Если это не так, то Вы можете посмотреть его в " + LATEST_PASSWORD_FILE);
+
+          await Passworder.writePassword(response.password);
+
+          const nextAttempt = await terminal.ask("Хотите посмотреть пароль ещё одного сервиса? (Y/N) ");
+          
+          if (nextAttempt === "Y") askService();
+          else askService(false);
+        } else {
+          terminal.print("Нет? За Вами кто-то наблюдает?");
+          terminal.print(`Тогда мы сохраним пароль в файле ${LATEST_PASSWORD_FILE}!`);
+          terminal.print("Вы сможете посмотреть его, когда за Вами никто небудет смотреть!");
+
+          await Passworder.writePassword(response.password);
+
+          return askService(false);
+        }
+      } else {
+        terminal.print("Не удалось получить пароль... :(");
+        const nextAttempt = await terminal.ask("Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ");
+        
+        if (nextAttempt === "Y") askService();
+        else askService(false);
+      }
+    } else if (response.type === TYPES.PASSWORD_CREATE) {
+      if (response.successed) {
+        
+      } else {
+  
+      }
+    } else if (response.type === TYPES.PASSWORD_OVERRIDE) {
+      if (response.successed) {
+  
+      } else {
+  
+      }
+    } else {
+  
+    }
+  }
+
+  askService();
 })();
