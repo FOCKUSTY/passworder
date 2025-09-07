@@ -6,7 +6,8 @@
     "build": "tsc && pkg -t node*-win-x64 dist/index.js -o dist/index.exe",
     "start": "npm run build && npm run execute",
     "execute": "cd dist && index.exe",
-    "start:js": "npm run build && node dist/index.js"
+    "execute:js": "node dist/index.js",
+    "start:js": "npm run build && npm run execute:js"
   },
   "repository": {
     "type": "git",

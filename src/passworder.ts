@@ -64,6 +64,10 @@ export class Passworder {
     return decrypted;
   }
 
+  public static decryptGlobal(global: string) {
+    return this.decrypt("GLOBAL_KEY", "GLOBAL_KEY", global);
+  }
+
   public static generatePassword(length: number = 15) {
     let output = "";
 
@@ -82,7 +86,7 @@ export class Passworder {
     return writeFile(join(".", FILE_NAME), JSON.stringify({
       global: global,
       passwords: {}
-    }));
+    }, undefined, 2));
   }
 
   public static writePassword(password: string) {
@@ -116,7 +120,7 @@ export class Passworder {
       return true;
     }
 
-    const decrypted = Passworder.decrypt("GLOBAL_KEY", "GLOBAL_KEY", this._file.global);
+    const decrypted = Passworder.decryptGlobal(this._file.global);
     
     if (key === decrypted) {
       return true;
@@ -136,8 +140,8 @@ export class Passworder {
     if (!this._file.global) throw new Error("Global key is null.");
 
     const encrypted = password !== true
-      ? Passworder.encrypt(this._file.global, this.login, password)
-      : Passworder.encrypt(this._file.global, this.login, Passworder.generatePassword());
+      ? Passworder.encrypt(Passworder.decryptGlobal(this._file.global), this.login, password)
+      : Passworder.encrypt(Passworder.decryptGlobal(this._file.global), this.login, Passworder.generatePassword());
 
     this._file.passwords[this.login][service] = encrypted;
 
@@ -152,12 +156,12 @@ export class Passworder {
     if (!password) {
       const servicePassword = this._file.passwords[this.login][service];
       if (servicePassword) {
-        if (!await this.validateGlobalKey(this._file.global)) throw new Error("Bad global key.");
+        if (!await this.validateGlobalKey(Passworder.decryptGlobal(this._file.global))) throw new Error("Bad global key.");
 
         return {
           successed: true,
           type: TYPES.PASSWORD_GET,
-          password: Passworder.decrypt(this._file.global, this.login, servicePassword)
+          password: Passworder.decrypt(Passworder.decryptGlobal(this._file.global), this.login, servicePassword)
         }
       };
 
@@ -169,14 +173,14 @@ export class Passworder {
 
           const encrypted = await this.addService(service, pass);
           
-          return Passworder.decrypt(this._file.global, this.login, encrypted);
+          return Passworder.decrypt(Passworder.decryptGlobal(this._file.global), this.login, encrypted);
         }
       };
     }
 
     const servicePassword = this._file.passwords[this.login][service];
     if (servicePassword) {
-      const decryptedServicePassword = Passworder.decrypt(this._file.global, this.login, servicePassword);
+      const decryptedServicePassword = Passworder.decrypt(Passworder.decryptGlobal(this._file.global), this.login, servicePassword);
       
       if (decryptedServicePassword !== password) {
         return {
@@ -214,7 +218,7 @@ export class Passworder {
   }
 
   private writeFile(file: typeof this._file) {
-    return writeFile(join(".", FILE_NAME), JSON.stringify(file))
+    return writeFile(join(".", FILE_NAME), JSON.stringify(file, undefined, 2))
   }
 }
 

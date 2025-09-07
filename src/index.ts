@@ -97,6 +97,7 @@ const checkFileStatus = (passworder: Passworder) => {
         if (next.toLowerCase() === "y") return askService();
         else return askService(false);
       } else {
+        terminal.print("У этого сервиса нет установленного пароля")
         const autoGenerateEnabled = await terminal.ask("Хотите автоматически сгенерировать пароль для этого сервиса? (Y/N) ");
         
         if (autoGenerateEnabled.toLowerCase() === "y") {
@@ -106,9 +107,12 @@ const checkFileStatus = (passworder: Passworder) => {
           return showPassword(isPasswordShow, pass, askService);
         } else {
           const pass = await terminal.ask("Ну нет, так нет, тогда сами вводите пароль: ");
+          
+          passworder.addService(service, pass);
+          Passworder.writePassword(pass);
+          
           terminal.print("Мы очистим терминал через 5 секунд, чтобы никто не увидел Ваш пароль");
 
-          Passworder.writePassword(pass);
           await clearTerminal();
 
           terminal.print("Мы сохранили Ваш пароль в файле " + LATEST_PASSWORD_FILE);
