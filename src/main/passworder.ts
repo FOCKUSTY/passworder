@@ -29,6 +29,10 @@ type WatchServiceResponse = ({
   password: string
 } | {
   successed: false,
+  type: typeof TYPES.PASSWORD_GET,
+  execute: (key: string) => string|false
+} | {
+  successed: false,
   type: typeof TYPES.PASSWORD_CREATE,
   execute: (pass: string|true) => Promise<string>
 } | {
@@ -58,16 +62,21 @@ export class Passworder {
   }
 
   public static decrypt(key: string, salt: string, encrypted: string) {
-    if (!encrypted.includes(":")) throw new Error("Bad encrypted text.");
-
-    const k = scryptSync(key, salt, 32);
-    const [ text, iv ] = encrypted.split(":");
-
-    const decipher = createDecipheriv('aes-256-cbc', k, Buffer.from(iv, "hex"));
-    let decrypted = decipher.update(text, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-
-    return decrypted;
+    try {
+      if (!encrypted.includes(":")) throw new Error("Bad encrypted text.");
+  
+      const k = scryptSync(key, salt, 32);
+      const [ text, iv ] = encrypted.split(":");
+  
+      const decipher = createDecipheriv('aes-256-cbc', k, Buffer.from(iv, "hex"));
+      let decrypted = decipher.update(text, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+  
+      return decrypted;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   }
 
   public static decryptGlobal(global: string) {
@@ -103,7 +112,10 @@ export class Passworder {
 
   private _file: {
     global: string|null,
-    passwords: Record<string, Record<string, string>>
+    passwords: Record<string, Record<string, {
+      password: string,
+      key: string
+    }>>
   };
 
   public constructor(public readonly login: string) {
@@ -142,18 +154,29 @@ export class Passworder {
   public async writeGlobalKey(key: string) {
     if (!await this.validateGlobalKey(key)) throw new Error("Global key is not valided.");
 
-    this._file.global = Passworder.encrypt("GLOBAL_KEY", "GLOBAL_KEY", key);
+    this._file.global = Passworder.encrypt(GLOBAL_KEY, GLOBAL_KEY, key);
     await this.writeFile(this._file);
   }
 
-  public async addService(service: string, password: string|true) {
+  public async addService(service: string, password: string|true, key?: string) {
     if (!this._file.global) throw new Error("Global key is null.");
 
-    const encrypted = password !== true
-      ? Passworder.encrypt(Passworder.decryptGlobal(this._file.global), this.login, password)
-      : Passworder.encrypt(Passworder.decryptGlobal(this._file.global), this.login, Passworder.generatePassword());
+    const hashKey = key
+      ? Passworder.decryptGlobal(key)
+      : Passworder.decryptGlobal(this._file.global);
 
-    this._file.passwords[this.login][service] = encrypted;
+    if (!hashKey) {
+      throw new Error("Bad global key.");
+    }
+
+    const encrypted = password !== true
+      ? Passworder.encrypt(hashKey, this.login, password)
+      : Passworder.encrypt(hashKey, this.login, Passworder.generatePassword());
+
+    this._file.passwords[this.login][service] = {
+      password: encrypted,
+      key: key ? Passworder.encrypt(GLOBAL_KEY, GLOBAL_KEY, hashKey) : this._file.global
+    };
 
     await this.writeFile(this._file);
 
@@ -166,12 +189,42 @@ export class Passworder {
     if (!password) {
       const servicePassword = this._file.passwords[this.login][service];
       if (servicePassword) {
-        if (!await this.validateGlobalKey(Passworder.decryptGlobal(this._file.global))) throw new Error("Bad global key.");
+        const global = Passworder.decryptGlobal(this._file.global);
+
+        if (!global) {
+          throw new Error("Bad global key.");
+        }
+        
+        if (!await this.validateGlobalKey(global)) throw new Error("Bad global key.");
+
+        const key = Passworder.decryptGlobal(servicePassword.key);
+
+        if (!key) {
+          throw new Error("Bad key.");
+        }
+
+        const decrypted = Passworder.decrypt(key, this.login, servicePassword.password);
+
+        if (!decrypted) {
+          return {
+            successed: false,
+            type: TYPES.PASSWORD_GET,
+            execute: (key: string): string|false => {
+              const decryptedSecondAttempt = Passworder.decrypt(key, this.login, servicePassword.password);
+              
+              if (!decryptedSecondAttempt) {
+                return false;
+              }
+
+              return decryptedSecondAttempt;
+            }
+          }
+        }
 
         return {
           successed: true,
           type: TYPES.PASSWORD_GET,
-          password: Passworder.decrypt(Passworder.decryptGlobal(this._file.global), this.login, servicePassword)
+          password: decrypted
         }
       };
 
@@ -183,14 +236,38 @@ export class Passworder {
 
           const encrypted = await this.addService(service, pass);
           
-          return Passworder.decrypt(Passworder.decryptGlobal(this._file.global), this.login, encrypted);
+          const global = Passworder.decryptGlobal(this._file.global);
+
+          if (!global) {
+            throw new Error("Bad global key.");
+          }
+
+          const decrypted = Passworder.decrypt(global, this.login, encrypted)
+
+          if (!decrypted) {
+            throw new Error("Decryption failded.");
+          }
+
+          return decrypted;
         }
       };
     }
 
     const servicePassword = this._file.passwords[this.login][service];
     if (servicePassword) {
-      const decryptedServicePassword = Passworder.decrypt(Passworder.decryptGlobal(this._file.global), this.login, servicePassword);
+      const global = Passworder.decryptGlobal(this._file.global);
+
+      if (!global) {
+        throw new Error("Bad global key.");
+      }
+
+      const key = Passworder.decryptGlobal(servicePassword.key);
+
+      if (!key) {
+        throw new Error("Bad key.")
+      }
+
+      const decryptedServicePassword = Passworder.decrypt(key, this.login, servicePassword.password);
       
       if (decryptedServicePassword !== password) {
         return {

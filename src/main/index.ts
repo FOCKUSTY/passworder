@@ -83,9 +83,28 @@ terminal.print("Что ж, не будем медлить!");
         return showPassword(isPasswordShow, response.password, askService);
       } else {
         terminal.print("Не удалось получить пароль... :(");
+        terminal.print("Возможно, там используется другой ключ шифрования...");
         const nextAttempt = await terminal.ask("Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ");
         
-        if (nextAttempt.toLowerCase() === "y") return askService();
+        if (nextAttempt.toLowerCase() === "y") {
+          const isGlobal = await terminal.ask("Там точно используется глобавльный ключ шифрования? (Y/N) ")
+          
+          if (isGlobal.toLowerCase() === "y") {
+            return askService();
+          } else {
+            const key = await terminal.ask("Тогда введите другой ключ: ");
+            
+            const data = response.execute(key);
+
+            if (!data) {
+              terminal.print("И всё же не получилось... эх :(");
+              return askService();
+            }
+            
+            const isPasswordShow = await terminal.ask("Пароль у нас, вывести? (Y/N) ");
+            return showPassword(data, isPasswordShow, askService);
+          }
+        }
         else return askService(false);
       }
     } else if (response.type === TYPES.PASSWORD_CREATE) {
