@@ -1,0 +1,34 @@
+{
+  "name": "passworder",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && pkg -t node*-win-x64 dist/index.js -o dist/index.exe",
+    "start": "npm run build && npm run execute",
+    "execute": "start ./dist/index.exe"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FOCKUSTY/passworder.git"
+  },
+  "author": {
+    "name": "FOCKUSTY",
+    "email": "viserd.yt@gmail.com",
+    "url": "https://fockusty.netlify.app"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FOCKUSTY/passworder/issues"
+  },
+  "homepage": "https://github.com/FOCKUSTY/passworder#readme",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "eslint": "^9.35.0",
+    "pkg": "^5.8.1",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.42.0"
+  }
+}
