@@ -15,8 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build & create archive
+      - name: Install, build & create archive
         run: |
+          npm install
           npm run build
           mkdir -p release_contents
           cp -r ./dist/index.exe release_contents/index.exe
