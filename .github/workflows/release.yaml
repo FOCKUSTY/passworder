@@ -17,6 +17,7 @@ jobs:
 
       - name: Create tar archive
         run: |
+          npm run build
           mkdir -p release_contents
           cp -r ./dist/index.exe release_contents/index.exe
           tar -czf release.tar.gz -C release_contents .
