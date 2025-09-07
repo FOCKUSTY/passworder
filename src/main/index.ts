@@ -1,3 +1,5 @@
+import { version } from "../../package.json";
+
 import { LATEST_PASSWORD_FILE, PROGRAM_NAME, TYPES } from "./constants";
 
 import Terminal from "./terminal";
@@ -5,7 +7,7 @@ import Passworder from "./passworder";
 
 const terminal = new Terminal();
 
-terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME}!`);
+terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${version}!`);
 terminal.print("Что ж, не будем медлить!");
 
 const checkFileStatus = (passworder: Passworder) => {

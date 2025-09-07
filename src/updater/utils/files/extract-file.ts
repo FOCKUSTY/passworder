@@ -9,6 +9,11 @@ import {
 } from "fs";
 import { join, parse, dirname } from "path";
 
+const LOCKED_FILES = [
+  "updater.exe",
+  "index.exe"
+];
+
 export const extractFile = async (path: string): Promise<void> => {
   if (!existsSync(path)) {
     throw new Error(`File not found: ${path}`);
@@ -16,12 +21,18 @@ export const extractFile = async (path: string): Promise<void> => {
 
   return new Promise((resolve, reject) => {
     const extract = tar.extract();
-    const dirPath = parse(path).dir;
+    const dirPath = parse(parse(path).dir).dir;
 
     let extractedCount = 0;
 
     extract.on("entry", (header, stream, next) => {
       const filePath = join(dirPath, header.name);
+
+      if (LOCKED_FILES.includes(filePath)) {
+        stream.resume();
+        next();
+        return;
+      }
 
       if (header.name.includes('..') || header.name.startsWith('/')) {
         stream.resume();
