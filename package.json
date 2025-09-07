@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc && pkg -t node*-win-x64 dist/index.js -o dist/index.exe",
+    "build": "tsc && npm run pkg",
+    "pkg": "npm run pkg:main && npm run pkg:au",
+    "pkg:main": "pkg -t node*-win-x64 dist/main/index.js -o dist/main.exe",
+    "pkg:au": "pkg -t node*-win-x64 dist/auto-updater/index.js -o dist/updater.exe",
     "start": "npm run build && npm run execute",
-    "execute": "cd dist && index.exe",
-    "execute:js": "node dist/index.js",
+    "execute": "cd dist && main.exe",
+    "execute:js": "node dist/main/index.js",
     "start:js": "npm run build && npm run execute:js"
   },
   "repository": {
