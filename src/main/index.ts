@@ -1,13 +1,18 @@
-import { version } from "../../package.json";
+import {
+  LATEST_PASSWORD_FILE,
+  PROGRAM_NAME,
+  TYPES,
+  VERSION_FILE_PATH
+} from "./constants";
 
-import { LATEST_PASSWORD_FILE, PROGRAM_NAME, TYPES } from "./constants";
+import { readFileSync } from "fs";
 
 import Terminal from "./terminal";
 import Passworder from "./passworder";
 
 const terminal = new Terminal();
 
-terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${version}!`);
+terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${readFileSync(VERSION_FILE_PATH, "utf-8")}!`);
 terminal.print("Что ж, не будем медлить!");
 
 (async () => {
