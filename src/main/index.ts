@@ -10,18 +10,12 @@ const terminal = new Terminal();
 terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${version}!`);
 terminal.print("Что ж, не будем медлить!");
 
-const checkFileStatus = (passworder: Passworder) => {
-  terminal.print("Проверяем статус файла...");
-  return passworder.getFileStatus();
-}
-
 (async () => {
   const login = await terminal.ask("Введите логин: ");
   
   const passworder = new Passworder(login);
-  
-  terminal.print("Статус файла: " + await checkFileStatus(passworder));
-  
+  await passworder.getFileStatus(); 
+
   const key = await terminal.ask("Введите ключ шифрования: ");
   
   passworder.writeGlobalKey(key);

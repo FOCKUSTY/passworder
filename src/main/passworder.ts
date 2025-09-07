@@ -5,9 +5,9 @@ import {
   scryptSync
 } from "crypto";
 
-import { readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import { readFileSync, writeFileSync, mkdirSync, lstatSync } from "fs";
-import { join } from "path";
+import { join, parse } from "path";
 
 import { Random } from "random-js";
 
@@ -88,6 +88,8 @@ export class Passworder {
   }
 
   public static async createFile(global: string|null = null) {
+    await mkdir(parse(FILE_PATH).dir, { recursive: true });
+
     return writeFile(FILE_PATH, JSON.stringify({
       global: global,
       passwords: {}
@@ -104,6 +106,8 @@ export class Passworder {
   };
 
   public constructor(public readonly login: string) {
+    mkdirSync(parse(FILE_PATH).dir, { recursive: true });
+    
     try {
       this._file = JSON.parse(readFileSync(FILE_PATH, "utf-8"));
     } catch {
@@ -113,15 +117,6 @@ export class Passworder {
       }));
 
       this._file = JSON.parse(readFileSync(FILE_PATH, "utf-8"));
-    }
-
-    const dirPath = join(".", PROGRAM_NAME);
-    try {
-      if (!lstatSync(dirPath).isDirectory()) {
-        mkdirSync(dirPath);
-      }
-    } catch {
-      mkdirSync(dirPath);
     }
 
     if (!this._file.passwords[login]) {
