@@ -1,6 +1,11 @@
+import { join } from "path";
+
 export const PROGRAM_NAME = "passworder";
 export const FILE_NAME = ".passworder";
-export const LATEST_PASSWORD_FILE = "latest-password" + FILE_NAME;
+export const FILE_PATH = join(PROGRAM_NAME, ".passworder");
+export const LATEST_PASSWORD_FILE = join(PROGRAM_NAME, "latest-password" + FILE_NAME);
+
+export const AVAILABLE_PASSWORD_SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$";
 
 export const STATUSES = {
   alreadyCreated: "Already created.",
