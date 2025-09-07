@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create tar archive
+      - name: Build & create archive
         run: |
           npm run build
           mkdir -p release_contents
