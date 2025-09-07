@@ -2,7 +2,10 @@ import { exec, spawn } from "child_process";
 import { existsSync } from "fs";
 import { join } from "path";
 
+const PROGRAM_NAME = "passworder";
+
 const UPDATER_FILE = join(process.cwd(), "updater.exe");
+const SECURITY_FILE = join(process.cwd(), "security.exe");
 const INDEX_FILE = join(process.cwd(), "latest", "index.exe");
 
 (async () => {
@@ -35,6 +38,15 @@ const INDEX_FILE = join(process.cwd(), "latest", "index.exe");
 
     console.log("Updater completed, starting index...");
     console.clear();
+
+    if (existsSync(SECURITY_FILE)) {
+      spawn(SECURITY_FILE, [], {
+        stdio: 'inherit',
+        cwd: process.cwd()
+      });
+    } else {
+      throw new Error("Security file is not exists.");
+    }
 
     if (existsSync(INDEX_FILE)) {
       spawn(INDEX_FILE, [], {
