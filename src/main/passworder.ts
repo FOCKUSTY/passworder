@@ -6,18 +6,18 @@ import {
 } from "crypto";
 
 import { readFile, writeFile } from "fs/promises";
-import { readFileSync, writeFileSync, mkdirSync, existsSync, lstatSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, lstatSync } from "fs";
 import { join } from "path";
 
 import { Random } from "random-js";
 
 import {
-  FILE_NAME,
   LATEST_PASSWORD_FILE,
   STATUSES,
   TYPES,
   AVAILABLE_PASSWORD_SYMBOLS,
-  PROGRAM_NAME
+  PROGRAM_NAME,
+  FILE_PATH
 } from "./constants";
 
 const random = new Random();
@@ -84,11 +84,11 @@ export class Passworder {
   }
 
   public static async readFile() {
-    return readFile(join(".", FILE_NAME), "utf-8");
+    return readFile(FILE_PATH, "utf-8");
   }
 
   public static async createFile(global: string|null = null) {
-    return writeFile(join(".", FILE_NAME), JSON.stringify({
+    return writeFile(FILE_PATH, JSON.stringify({
       global: global,
       passwords: {}
     }, undefined, 2));
@@ -105,14 +105,14 @@ export class Passworder {
 
   public constructor(public readonly login: string) {
     try {
-      this._file = JSON.parse(readFileSync(join(".", FILE_NAME), "utf-8"));
+      this._file = JSON.parse(readFileSync(FILE_PATH, "utf-8"));
     } catch {
-      writeFileSync(join(".", FILE_NAME), JSON.stringify({
+      writeFileSync(FILE_PATH, JSON.stringify({
         global: null,
         passwords: {}
       }));
 
-      this._file = JSON.parse(readFileSync(join(".", FILE_NAME), "utf-8"));
+      this._file = JSON.parse(readFileSync(FILE_PATH, "utf-8"));
     }
 
     const dirPath = join(".", PROGRAM_NAME);
@@ -232,7 +232,7 @@ export class Passworder {
   }
 
   private writeFile(file: typeof this._file) {
-    return writeFile(join(".", FILE_NAME), JSON.stringify(file, undefined, 2))
+    return writeFile(FILE_PATH, JSON.stringify(file, undefined, 2))
   }
 }
 
