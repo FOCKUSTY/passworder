@@ -21,7 +21,6 @@ jobs:
           npm run build
           mkdir -p release_contents
           mkdir -p release_contents/latest
-          cp -r ./dist/passworder/.version release_contents/.version
           cp -r ./dist/passworder/index.exe release_contents/index.exe
           cp -r ./dist/passworder/updater.exe release_contents/updater.exe
           cp -r ./dist/passworder/latest/index.exe release_contents/latest/index.exe
