@@ -12,7 +12,7 @@ import { pseudoRandomBytes } from "crypto";
     await readFile(FILE_PATH);
     return process.exit();
   } catch {
-    const global = pseudoRandomBytes(1024 * 32).toString("ascii");
+    const global = pseudoRandomBytes(6 ** 6).toString("ascii");
     await writeFile(FILE_PATH, global, "utf-8");
   }
 
