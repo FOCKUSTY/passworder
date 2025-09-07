@@ -22,7 +22,7 @@ jobs:
           mkdir -p release_contents
           cp -r ./dist/passworder/index.exe release_contents/index.exe
           cp -r ./dist/passworder/updater.exe release_contents/updater.exe
-          cp -r ./dist/passworder/latest/index.exe release_contents//latestuindex.exe
+          cp -r ./dist/passworder/latest/index.exe release_contents/latest/index.exe
           tar -czf release.tar.gz -C release_contents .
 
       - name: Create Release
