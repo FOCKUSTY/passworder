@@ -6,7 +6,7 @@ import {
 } from "crypto";
 
 import { mkdir, readFile, writeFile } from "fs/promises";
-import { readFileSync, writeFileSync, mkdirSync, lstatSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { join, parse } from "path";
 
 import { Random } from "random-js";
@@ -16,10 +16,11 @@ import {
   STATUSES,
   TYPES,
   AVAILABLE_PASSWORD_SYMBOLS,
-  PROGRAM_NAME,
-  FILE_PATH
+  FILE_PATH,
+  GLOBAL_FILE_PATH
 } from "./constants";
 
+const GLOBAL_KEY = readFileSync(GLOBAL_FILE_PATH, "utf-8");
 const random = new Random();
 
 type WatchServiceResponse = ({
@@ -70,7 +71,7 @@ export class Passworder {
   }
 
   public static decryptGlobal(global: string) {
-    return this.decrypt("GLOBAL_KEY", "GLOBAL_KEY", global);
+    return this.decrypt(GLOBAL_KEY, GLOBAL_KEY, global);
   }
 
   public static generatePassword(length: number = 15) {

@@ -4,19 +4,15 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc && npm run pkg",
-    
     "create-folder": "mkdir -p dist\\passworder && mkdir -p dist\\passworder\\latest",
-
     "pkg": "npm run pkg:main && npm run pkg:au && npm run pkg:index",
     "pkg:index": "pkg -t node*-win-x64 dist/index.js -o dist/passworder/index.exe",
     "pkg:main": "pkg -t node*-win-x64 dist/main/index.js -o dist/passworder/latest/index.exe",
     "pkg:au": "pkg -t node*-win-x64 dist/updater/index.js -o dist/passworder/updater.exe",
-    
     "execute": "cd dist && index.exe",
     "execute:index": "cd dist/passworder && index.exe",
     "execute:updater": "cd dist/passworder && updater.exe",
     "execute:js": "node dist/main/index.js",
-
     "start": "npm run build && npm run execute",
     "start:index": "npm run build && npm run execute:index",
     "start:updater": "npm run build && npm run execute:updater",
