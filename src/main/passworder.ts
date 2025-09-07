@@ -11,7 +11,13 @@ import { join } from "path";
 
 import { Random } from "random-js";
 
-import { FILE_NAME, LATEST_PASSWORD_FILE, STATUSES, TYPES } from "./constants";
+import {
+  FILE_NAME,
+  LATEST_PASSWORD_FILE,
+  STATUSES,
+  TYPES,
+  AVAILABLE_PASSWORD_SYMBOLS
+} from "./constants";
 
 const random = new Random();
 
@@ -35,8 +41,6 @@ type WatchServiceResponse = ({
   type: typeof TYPES.PASSWORD_CREATE,
   password: string,
 })
-
-const AVAILABLE_PASSWORD_SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$";
 
 export class Passworder {
   public static encrypt(key: string, salt: string, text: string) {
