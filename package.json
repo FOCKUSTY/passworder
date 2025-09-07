@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsc && pkg -t node*-win-x64 dist/index.js -o dist/index.exe",
     "start": "npm run build && npm run execute",
-    "execute": "cd dist && index.exe"
+    "execute": "cd dist && index.exe",
+    "start:js": "npm run build && node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -30,5 +31,8 @@
     "pkg": "^5.8.1",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.42.0"
+  },
+  "dependencies": {
+    "random-js": "^2.1.0"
   }
 }

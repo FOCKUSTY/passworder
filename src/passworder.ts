@@ -6,10 +6,14 @@ import {
 } from "crypto";
 
 import { readFile, writeFile } from "fs/promises";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
+import { Random } from "random-js";
+
 import { FILE_NAME, LATEST_PASSWORD_FILE, STATUSES, TYPES } from "./constants";
+
+const random = new Random();
 
 type WatchServiceResponse = ({
   successed: true,
@@ -18,17 +22,21 @@ type WatchServiceResponse = ({
 } | {
   successed: false,
   type: typeof TYPES.PASSWORD_CREATE,
-  execute: (pass: string|true) => unknown
+  execute: (pass: string|true) => Promise<string>
 } | {
   successed: false,
   type: typeof TYPES.PASSWORD_OVERRIDE
 } | {
   successed: true,
   type: typeof TYPES.PASSWORD_OVERRIDE
+  password: string,
 } | {
   successed: true,
-  type: typeof TYPES.PASSWORD_CREATE
+  type: typeof TYPES.PASSWORD_CREATE,
+  password: string,
 })
+
+const AVAILABLE_PASSWORD_SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$";
 
 export class Passworder {
   public static encrypt(key: string, salt: string, text: string) {
@@ -56,8 +64,14 @@ export class Passworder {
     return decrypted;
   }
 
-  public static generatePassword() {
-    return randomBytes(20).toString("hex");
+  public static generatePassword(length: number = 15) {
+    let output = "";
+
+    for (let i = 0; i < length; i++) {
+      output += AVAILABLE_PASSWORD_SYMBOLS[random.integer(0, AVAILABLE_PASSWORD_SYMBOLS.length-1)];
+    };
+
+    return output;
   }
 
   public static async readFile() {
@@ -81,7 +95,20 @@ export class Passworder {
   };
 
   public constructor(public readonly login: string) {
-    this._file = JSON.parse(readFileSync(join(".", FILE_NAME), "utf-8"));
+    try {
+      this._file = JSON.parse(readFileSync(join(".", FILE_NAME), "utf-8"));
+    } catch {
+      writeFileSync(join(".", FILE_NAME), JSON.stringify({
+        global: null,
+        passwords: {}
+      }));
+
+      this._file = JSON.parse(readFileSync(join(".", FILE_NAME), "utf-8"));
+    }
+
+    if (!this._file.passwords[login]) {
+      this._file.passwords[login] = {};
+    }
   }
 
   public async validateGlobalKey(key: string) {
@@ -110,13 +137,13 @@ export class Passworder {
 
     const encrypted = password !== true
       ? Passworder.encrypt(this._file.global, this.login, password)
-      : Passworder.generatePassword();
+      : Passworder.encrypt(this._file.global, this.login, Passworder.generatePassword());
 
     this._file.passwords[this.login][service] = encrypted;
 
     await this.writeFile(this._file);
 
-    return this._file;
+    return encrypted;
   }
 
   public async watchService(service: string, password?: string): Promise<WatchServiceResponse> {
@@ -137,10 +164,12 @@ export class Passworder {
       return {
         successed: false,
         type: TYPES.PASSWORD_CREATE,
-        execute: (pass: string|true) => {
+        execute: async (pass: string|true) => {
           if (!this._file.global) throw new Error("Global key is null.");
 
-          return this.addService(service, pass);
+          const encrypted = await this.addService(service, pass);
+          
+          return Passworder.decrypt(this._file.global, this.login, encrypted);
         }
       };
     }
@@ -156,17 +185,21 @@ export class Passworder {
         }
       };
 
+      await this.addService(service, password);
+      
       return {
         successed: true,
-        type: TYPES.PASSWORD_OVERRIDE
+        type: TYPES.PASSWORD_OVERRIDE,
+        password: password
       }
     }
 
-    this.addService(service, password);
+    await this.addService(service, password);
     
     return {
       successed: true,
-      type: TYPES.PASSWORD_CREATE
+      type: TYPES.PASSWORD_CREATE,
+      password: password
     }
   }
 
