@@ -6,7 +6,7 @@ import {
 } from "crypto";
 
 import { readFile, writeFile } from "fs/promises";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, lstatSync } from "fs";
 import { join } from "path";
 
 import { Random } from "random-js";
@@ -16,7 +16,8 @@ import {
   LATEST_PASSWORD_FILE,
   STATUSES,
   TYPES,
-  AVAILABLE_PASSWORD_SYMBOLS
+  AVAILABLE_PASSWORD_SYMBOLS,
+  PROGRAM_NAME
 } from "./constants";
 
 const random = new Random();
@@ -112,6 +113,15 @@ export class Passworder {
       }));
 
       this._file = JSON.parse(readFileSync(join(".", FILE_NAME), "utf-8"));
+    }
+
+    const dirPath = join(".", PROGRAM_NAME);
+    try {
+      if (!lstatSync(dirPath).isDirectory()) {
+        mkdirSync(dirPath);
+      }
+    } catch {
+      mkdirSync(dirPath);
     }
 
     if (!this._file.passwords[login]) {
