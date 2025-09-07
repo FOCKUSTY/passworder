@@ -1,0 +1,32 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create tar archive
+        run: |
+          mkdir -p release_contents
+          cp -r ./dist/index.exe release_contents/index.exe
+          tar -czf release.tar.gz -C release_contents .
+
+      - name: Create Release
+        run: |
+          gh release create "${{ github.ref_name}}" \
+            --repo="$GITHUB_REPOSITORY" \
+            --title="${GITHUB_REF_NAME#v}" \
+            --generate-notes \
+            release.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
