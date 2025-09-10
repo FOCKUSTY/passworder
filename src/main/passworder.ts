@@ -145,6 +145,10 @@ export class Passworder {
     }
   }
 
+  public list() {
+    return Object.keys(this._file.passwords[this.login]);
+  }
+
   public async validateGlobalKey(key: string) {
     if (!this._file.global) {      
       return true;

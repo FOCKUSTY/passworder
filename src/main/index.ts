@@ -4,7 +4,10 @@ import {
   TYPES,
   VERSION_FILE_PATH,
   PASSWORD_TYPES,
-  formatRussianWords
+  formatRussianWords,
+  AVAILABLE_METHODS,
+  AVAILABLE_METHODS_DESCRIPTION,
+  AVAILABLE_METHODS_INDEX_OFFSET
 } from "./constants";
 
 import { readFileSync } from "fs";
@@ -35,16 +38,44 @@ class User {
     this.key = key;
   }
 
-  public async execute(): Promise<unknown> {
+  public async execute(): Promise<void> {
     await this.passworder.init();
     await this.passworder.writeGlobalKey(this.key);
 
     this.terminal.print("Мы сохранили Ваши данные");
 
-    return this.ask();
+    return this.chooseMethod();
   }
 
-  public async ask() {
+  public async chooseMethod() {
+    const methods = AVAILABLE_METHODS.map((method, index) => 
+      `${method} (${+index+AVAILABLE_METHODS_INDEX_OFFSET}) — ${AVAILABLE_METHODS_DESCRIPTION[method]}`
+    ).join("\n");
+    
+    this.terminal.print("Выберите подходящий для Вас метод:");
+    this.terminal.print(methods);
+    
+    const inputedMethod = await this.terminal.ask("");
+    const method = this.validateMethod(inputedMethod);
+    if (!method) {
+      this.terminal.print("Мы не нашли подходящего метода, попробуйте снова");
+      this.chooseMethod();
+      return;
+    }
+
+    return await this[method]();
+  }
+
+  public async list() {
+    const services = this.passworder.list().join("\n");
+    
+    this.terminal.print("Вот все сервисы с установленным паролем:");
+    this.terminal.print(services);
+
+    this.chooseMethod();
+  }
+
+  public async watch() {
     const service = await this.terminal.ask("Какой сервис Вы хотите посмотреть? ");
     const response = await this.passworder.watchService(service);
 
@@ -128,13 +159,13 @@ class User {
     const next = await this.terminal.question("Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ");
     
     if (!next) {
-      return this.ask();
+      return this.next();
     }
 
     const isGlobal = await this.terminal.question("Там точно используется глобавльный ключ шифрования? (Y/N) ");
     
     if (isGlobal) {
-      return this.ask();
+      return this.next();
     }
 
     const key = await this.terminal.ask("Введите другой ключ шифрования: ");
@@ -170,7 +201,7 @@ class User {
     const next = await this.terminal.question("Продолжить? (Y/N) ");
     
     return next
-      ? this.ask()
+      ? this.chooseMethod()
       : this.exit();
   }
 
@@ -184,6 +215,18 @@ class User {
         resolve(this.terminal.clear());
       }, this.terminal.props.clearCooldown);
     });
+  }
+
+  private validateMethod(method: string): (typeof AVAILABLE_METHODS)[number]|false {
+    if ((AVAILABLE_METHODS as readonly string[]).includes(method)) {
+      return method as (typeof AVAILABLE_METHODS)[number];
+    }
+
+    if (Number.isNaN(+method)) {
+      return false;
+    }
+
+    return AVAILABLE_METHODS[+method-AVAILABLE_METHODS_INDEX_OFFSET] ?? false;
   }
 }
 

@@ -40,6 +40,18 @@ export const PASSWORD_TYPES = {
   [TYPES.PASSWORD_GET]: "get"
 } as const;
 
+export const AVAILABLE_METHODS = [
+  "watch",
+  "list"
+] as const;
+
+export const AVAILABLE_METHODS_DESCRIPTION: Record<(typeof AVAILABLE_METHODS)[number], string> = {
+  list: "Список всех сервисов",
+  watch: "Посмотреть конкретный сервис"
+}
+
+export const AVAILABLE_METHODS_INDEX_OFFSET = 1;
+
 export const formatRussianWords = (
 	num: number,
 	stage: [string, string, string] | [string, string]
