@@ -15,11 +15,62 @@ const terminal = new Terminal();
 terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${readFileSync(VERSION_FILE_PATH, "utf-8")}!`);
 terminal.print("Что ж, не будем медлить!");
 
+class User {
+  public readonly terminal: Terminal;
+  public readonly passworder: Passworder;
+  public readonly login: string;
+  public readonly key: string; 
+
+  public constructor({
+    terminal,
+    login,
+    key,
+  }: {
+    terminal: Terminal,
+    login: string,
+    key: string,
+  }) {
+    this.terminal = terminal;
+    this.passworder = new Passworder(login);
+    this.login = login;
+    this.key = key;
+  }
+
+  public async execute(): Promise<unknown> {
+    await this.passworder.init();
+
+    await this.clear();
+    this.terminal.print("Мы сохранили Ваши данные");
+
+    return;
+  }
+
+  protected clear() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(terminal.clear());
+      }, terminal.props.clearCooldown);
+    });
+  }
+}
+
+export class Program {
+  public constructor(
+    public readonly terminal: Terminal = new Terminal()
+  ) {}
+
+  public async execute(): Promise<User> {
+    const login = await terminal.ask("Введите логин: ");
+    const key = await terminal.ask("Введите ключ шифрования: ");
+
+    return new User({ terminal: this.terminal, login, key });
+  }
+}
+
 (async () => {
   const login = await terminal.ask("Введите логин: ");
   
-  const passworder = new Passworder(login);
-  await passworder.getFileStatus(); 
+  const passworder = await new Passworder(login).init();
 
   const key = await terminal.ask("Введите ключ шифрования: ");
   

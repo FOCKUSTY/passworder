@@ -294,14 +294,14 @@ export class Passworder {
     }
   }
 
-  public async getFileStatus() {
+  public async init() {
     try {
       await Passworder.readFile();
-      return STATUSES.alreadyCreated;
     } catch {
       await Passworder.createFile();
-      return STATUSES.createdNow;
     }
+
+    return this;
   }
 
   private writeFile(file: typeof this._file) {
