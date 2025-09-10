@@ -2,13 +2,15 @@ import {
   LATEST_PASSWORD_FILE,
   PROGRAM_NAME,
   TYPES,
-  VERSION_FILE_PATH
+  VERSION_FILE_PATH,
+  PASSWORD_TYPES,
+  formatRussianWords
 } from "./constants";
 
 import { readFileSync } from "fs";
 
 import Terminal from "./terminal";
-import Passworder from "./passworder";
+import Passworder, { WatchServiceCreate, WatchServiceGet, WatchServiceOverride, WatchServiceResponse } from "./passworder";
 
 const terminal = new Terminal();
 
@@ -20,6 +22,8 @@ class User {
   public readonly passworder: Passworder;
   public readonly login: string;
   public readonly key: string; 
+
+  public currentService: string = "none";
 
   public constructor({
     terminal,
@@ -39,17 +43,156 @@ class User {
   public async execute(): Promise<unknown> {
     await this.passworder.init();
 
-    await this.clear();
     this.terminal.print("Мы сохранили Ваши данные");
 
     return;
   }
 
+  public async ask() {
+    const service = await terminal.ask("Какой сервис Вы хотите посмотреть? ");
+    const response = await this.passworder.watchService(service);
+
+    this.currentService = service;
+
+    this[PASSWORD_TYPES[response.type]](response);
+  }
+
+  public async get(response: WatchServiceResponse) {
+    if (response.type !== TYPES.PASSWORD_GET) {
+      throw new Error("Can not execute invalid type.");
+    }
+
+    if (!response.successed) {
+      return this.badPassword(response.getPassword);
+    }
+
+    terminal.print("Удалось получится пароль, ура!");
+    terminal.print("Держите его, и никому не показывайте!");
+
+    return this.executePassword(response.password);
+  }
+
+  public async create(response: WatchServiceResponse) {
+    if (response.type !== TYPES.PASSWORD_CREATE) {
+      throw new Error("Can not execute invalid type.");
+    }
+
+    if (response.successed) {
+      terminal.print("Вы успешно создали пароль!");
+      terminal.print("Мы сохранил его в файле " + LATEST_PASSWORD_FILE);
+
+      return this.next();
+    }
+
+    this.terminal.print("У этого сервиса нет установленного пароля");
+    const authGeneratePassword = await this.terminal.question("Сгенерировать пароль автоматически? (Y/N) ");
+    
+    if (authGeneratePassword) {
+      const password = await response.createPassword(true);
+      return this.executePassword(password);
+    }
+
+    const password = await this.terminal.ask("Ну тогда вводите пароли сами: ");
+    
+    this.passworder.addService(this.currentService, password);
+    await this.savePassword(password);
+
+    return this.next();
+  }
+
+  public async change(response: WatchServiceResponse) {
+    if (response.type !== TYPES.PASSWORD_OVERRIDE) {
+      throw new Error("Can not execute invalid type.");
+    }
+
+    if (!response.successed) {
+      return this.next();
+    }
+
+    await this.savePassword(response.password);
+    
+    return this.next();
+  }
+
+  public exit(): void {
+    terminal.print("Спасибо, что используете " + PROGRAM_NAME);
+    terminal.print("Пока-пока!");
+
+    return process.exit();
+  }
+
+  protected savePassword(password: string) {
+    this.terminal.print("Мы сохранили этот пароль, как последний в " + LATEST_PASSWORD_FILE);
+    return Passworder.writePassword(password);
+  }
+
+  protected async badPassword(getPassword: (key: string) => string | false): Promise<void> {
+    terminal.print("Не удалось получить пароль... :(");
+    terminal.print("Возможно, там используется другой ключ шифрования...");
+
+    const next = await terminal.question("Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ");
+    
+    if (!next) {
+      return this.ask();
+    }
+
+    const isGlobal = await terminal.question("Там точно используется глобавльный ключ шифрования? (Y/N) ");
+    
+    if (isGlobal) {
+      return this.ask();
+    }
+
+    const key = await terminal.ask("Введите другой ключ шифрования: ");
+    const password = getPassword(key);
+
+    if (password) {
+      return this.executePassword(password);
+    }
+
+    this.badPassword(getPassword);
+    
+    return;
+  }
+
+  protected async executePassword(password: string) {
+    const showPassword = await terminal.question("Показать пароль? (Y/N) ");
+    
+    if (showPassword) {
+      terminal.print("Держите Ваш пароль: " + password);
+      terminal.print("Мы очистим терминал через 5 секунд, копируйте быстрее!");
+
+      await this.clear();
+
+      terminal.print("Надеемся, что Вы успели скопировать пароль!");
+      terminal.print("Если это не так, то Вы можете посмотреть его в " + LATEST_PASSWORD_FILE);
+    } else {
+      terminal.print("Нет? За Вами кто-то наблюдает?");
+      terminal.print(`Тогда мы сохраним пароль в файле ${LATEST_PASSWORD_FILE}!`);
+      terminal.print("Вы сможете посмотреть его, когда за Вами никто небудет смотреть!");
+    }
+
+    await this.savePassword(password);
+
+    return this.next();
+  }
+
+  protected async next() {
+    const next = await terminal.question("Продолжить? (Y/N) ");
+    
+    return next
+      ? this.ask()
+      : this.exit();
+  }
+
   protected clear() {
+    const seconds = Math.floor(this.terminal.props.clearCooldown / 1000);
+    
+    this.terminal.print(`Мы очистим консоль через ${seconds} ${formatRussianWords(seconds, ["секунду", "секунды", "секунд"])}`);
+
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(terminal.clear());
-      }, terminal.props.clearCooldown);
+        resolve(this.terminal.clear());
+      }, this.terminal.props.clearCooldown);
     });
   }
 }
@@ -60,160 +203,13 @@ export class Program {
   ) {}
 
   public async execute(): Promise<User> {
-    const login = await terminal.ask("Введите логин: ");
-    const key = await terminal.ask("Введите ключ шифрования: ");
+    const login = await this.terminal.ask("Введите логин: ");
+    const key = await this.terminal.ask("Введите ключ шифрования: ");
+
+    this.terminal.clear();
 
     return new User({ terminal: this.terminal, login, key });
   }
 }
 
-(async () => {
-  const login = await terminal.ask("Введите логин: ");
-  
-  const passworder = await new Passworder(login).init();
-
-  const key = await terminal.ask("Введите ключ шифрования: ");
-  
-  passworder.writeGlobalKey(key);
-
-  terminal.clear();
-  terminal.print("Мы сохранили Ваши данные");
-  
-  const clearTerminal = () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(terminal.clear());
-      }, 5 * 1000);
-    });
-  }
-
-  const showPassword = async (data: string, password: string, askService: (end?: boolean) => Promise<unknown>) => {
-    if (data.toLowerCase() === "y") {
-      terminal.print("Держите Ваш пароль: " + password);
-      terminal.print("Мы очистим терминал через 5 секунд, копируйте быстрее!");
-
-      await clearTerminal();
-
-      terminal.print("Надеемся, что Вы успели скопировать пароль!");
-      terminal.print("Если это не так, то Вы можете посмотреть его в " + LATEST_PASSWORD_FILE);
-
-      await Passworder.writePassword(password);
-
-      const nextAttempt = await terminal.ask("Хотите посмотреть пароль ещё одного сервиса? (Y/N) ");
-
-      if (nextAttempt.toLowerCase() === "y") return askService();
-      else return askService(false);
-    } else {
-      terminal.print("Нет? За Вами кто-то наблюдает?");
-      terminal.print(`Тогда мы сохраним пароль в файле ${LATEST_PASSWORD_FILE}!`);
-      terminal.print("Вы сможете посмотреть его, когда за Вами никто небудет смотреть!");
-
-      await Passworder.writePassword(password);
-
-      return askService(false);
-    }
-  }
-
-  const askService = async (end?: boolean) => {
-    if (end === false) { 
-      terminal.print("Спасибо, что используете " + PROGRAM_NAME);
-      terminal.print("Пока-пока!");
-      return terminal.close();
-    }
-
-    const service = await terminal.ask("Какой сервис Вы хотите посмотреть? ");
-    const response = await passworder.watchService(service);
-    
-    if (response.type === TYPES.PASSWORD_GET) {
-      if (response.successed) {
-        terminal.print("Удалось получится пароль, ура!");
-        terminal.print("Держите его, и никому не показывайте!");
-
-        const isPasswordShow = await terminal.ask("Показать пароль? (Y/N) ");
-
-        return showPassword(isPasswordShow, response.password, askService);
-      } else {
-        terminal.print("Не удалось получить пароль... :(");
-        terminal.print("Возможно, там используется другой ключ шифрования...");
-        const nextAttempt = await terminal.ask("Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ");
-        
-        if (nextAttempt.toLowerCase() === "y") {
-          const isGlobal = await terminal.ask("Там точно используется глобавльный ключ шифрования? (Y/N) ")
-          
-          if (isGlobal.toLowerCase() === "y") {
-            return askService();
-          } else {
-            const key = await terminal.ask("Тогда введите другой ключ: ");
-            
-            const data = response.execute(key);
-
-            if (!data) {
-              terminal.print("И всё же не получилось... эх :(");
-              return askService();
-            }
-            
-            const isPasswordShow = await terminal.ask("Пароль у нас, вывести? (Y/N) ");
-            return showPassword(data, isPasswordShow, askService);
-          }
-        }
-        else return askService(false);
-      }
-    } else if (response.type === TYPES.PASSWORD_CREATE) {
-      if (response.successed) {
-        terminal.print("Вы успешно создали пароль!");
-        terminal.print("Мы сохранил его в файле " + LATEST_PASSWORD_FILE);
-        
-        const next = await terminal.ask("Хотите что-нибудь ещё? (Y/N) ");
-
-        if (next.toLowerCase() === "y") return askService();
-        else return askService(false);
-      } else {
-        terminal.print("У этого сервиса нет установленного пароля")
-        const autoGenerateEnabled = await terminal.ask("Хотите автоматически сгенерировать пароль для этого сервиса? (Y/N) ");
-        
-        if (autoGenerateEnabled.toLowerCase() === "y") {
-          const pass = await response.execute(true);
-          const isPasswordShow = await terminal.ask("Отлично! Мы создали для Вас пароль, показать его? (Y/N) ");
-  
-          return showPassword(isPasswordShow, pass, askService);
-        } else {
-          const pass = await terminal.ask("Ну нет, так нет, тогда сами вводите пароль: ");
-          
-          passworder.addService(service, pass);
-          Passworder.writePassword(pass);
-          
-          terminal.print("Мы очистим терминал через 5 секунд, чтобы никто не увидел Ваш пароль");
-
-          await clearTerminal();
-
-          terminal.print("Мы сохранили Ваш пароль в файле " + LATEST_PASSWORD_FILE);
-
-          const next = await terminal.ask("Хотите что-нибудь ещё? (Y/N) ");
-
-          if (next.toLowerCase() === "y") return askService();
-          else return askService(false);
-        }
-      }
-    } else if (response.type === TYPES.PASSWORD_OVERRIDE) {
-      if (response.successed) {
-        Passworder.writePassword(response.password);
-
-        const next = await terminal.ask("Вы успешно сменили пароль, хотите посмотреть что-нибудь ещё? (Y/N) ");
-        
-        terminal.print("Также мы сохранили Ваш пароль в файле " + LATEST_PASSWORD_FILE);
-
-        if (next.toLowerCase() === "y") return askService();
-        else return askService(false);
-      } else {
-        const next = await terminal.ask("Интересно... хотите попробовать ещё раз? (Y/N)");
-        
-        if (next.toLowerCase() === "y") return askService();
-        else return askService(false);
-      }
-    } else {
-      throw new Error("UNKNOWN ERROR");
-    }
-  }
-
-  await askService();
-})();
+new Program().execute();

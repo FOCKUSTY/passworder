@@ -29,13 +29,13 @@ export type WatchServiceGet = ({
 } | {
   successed: false,
   type: typeof TYPES.PASSWORD_GET,
-  execute: (key: string) => string|false
+  getPassword: (key: string) => string|false
 });
 
 export type WatchServiceCreate = ({
   successed: false,
   type: typeof TYPES.PASSWORD_CREATE,
-  execute: (pass: string|true) => Promise<string>
+  createPassword: (pass: string|true) => Promise<string>
 } | {
   successed: true,
   type: typeof TYPES.PASSWORD_CREATE,
@@ -51,7 +51,7 @@ export type WatchServiceOverride = ({
   password: string,
 })
 
-type WatchServiceResponse =
+export type WatchServiceResponse =
   | WatchServiceGet
   | WatchServiceCreate
   | WatchServiceOverride;
@@ -217,7 +217,7 @@ export class Passworder {
           return {
             successed: false,
             type: TYPES.PASSWORD_GET,
-            execute: (key: string): string|false => {
+            getPassword: (key: string): string|false => {
               const decryptedSecondAttempt = Passworder.decrypt(key, this.login, servicePassword.password);
               
               if (!decryptedSecondAttempt) {
@@ -239,7 +239,7 @@ export class Passworder {
       return {
         successed: false,
         type: TYPES.PASSWORD_CREATE,
-        execute: async (pass: string|true) => {
+        createPassword: async (pass: string|true) => {
           if (!this._file.global) throw new Error("Global key is null.");
 
           const encrypted = await this.addService(service, pass);
