@@ -12,6 +12,15 @@ export const GLOBAL_FILE_PATH = join(DIR_PATH, GLOBAL_FILE_NAME);
 
 export const AVAILABLE_PASSWORD_SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$";
 
+export const YES_ANSWERS = [
+  "y",
+  "yes",
+  "н",
+  "нуы",
+  "да",
+  "д"
+];
+
 export const STATUSES = {
   alreadyCreated: "Already created.",
   createdNow: "Created now."

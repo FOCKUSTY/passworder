@@ -2,6 +2,8 @@ import { Console } from "console";
 import { Abortable } from "events";
 import * as ReadLine from "readline/promises";
 
+import { YES_ANSWERS } from "./constants";
+
 type Props = Partial<{
   clearCooldown: number
 }>;
@@ -28,17 +30,23 @@ export class Terminal extends Console {
     }
   }
 
-  public print(...data: any[]) {
+  public print<T>(...data: T[]): T[] {
     console.log(...data);
+    return data;
   }
 
-  public ask(query: string, options?: Abortable) {
+  public async question(query: string, options?: Abortable): Promise<boolean> {
+    const answer = await this.ask(query, options);
+    return YES_ANSWERS.includes(answer);
+  }
+
+  public ask(query: string, options?: Abortable): Promise<string> {
     return options 
       ? this.terminal.question(query, options)
       : this.terminal.question(query);
   };
 
-  public close() {
+  public close(): void {
     return this.terminal.close();
   };
 }
