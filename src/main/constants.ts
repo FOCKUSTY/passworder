@@ -18,7 +18,9 @@ export const YES_ANSWERS = [
   "н",
   "нуы",
   "да",
-  "д"
+  "д",
+  "l",
+  "la"
 ];
 
 export const STATUSES = {
@@ -30,4 +32,10 @@ export const TYPES = {
   PASSWORD_CREATE: "PASSWORD CREATE",
   PASSWORD_GET: "PASSWORD GET",
   PASSWORD_OVERRIDE: "PASSWORD OVERRIDE"
+} as const;
+
+export const PASSWORD_TYPES = {
+  [TYPES.PASSWORD_CREATE]: "create",
+  [TYPES.PASSWORD_OVERRIDE]: "change",
+  [TYPES.PASSWORD_GET]: "get"
 } as const;
