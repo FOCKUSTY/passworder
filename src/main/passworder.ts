@@ -13,7 +13,6 @@ import { Random } from "random-js";
 
 import {
   LATEST_PASSWORD_FILE,
-  STATUSES,
   TYPES,
   AVAILABLE_PASSWORD_SYMBOLS,
   FILE_PATH,
@@ -23,7 +22,7 @@ import {
 const GLOBAL_KEY = readFileSync(GLOBAL_FILE_PATH, "utf-8");
 const random = new Random();
 
-type WatchServiceResponse = ({
+export type WatchServiceGet = ({
   successed: true,
   type: typeof TYPES.PASSWORD_GET,
   password: string
@@ -31,22 +30,31 @@ type WatchServiceResponse = ({
   successed: false,
   type: typeof TYPES.PASSWORD_GET,
   execute: (key: string) => string|false
-} | {
+});
+
+export type WatchServiceCreate = ({
   successed: false,
   type: typeof TYPES.PASSWORD_CREATE,
   execute: (pass: string|true) => Promise<string>
 } | {
+  successed: true,
+  type: typeof TYPES.PASSWORD_CREATE,
+  password: string,
+});
+
+export type WatchServiceOverride = ({
   successed: false,
   type: typeof TYPES.PASSWORD_OVERRIDE
 } | {
   successed: true,
   type: typeof TYPES.PASSWORD_OVERRIDE
   password: string,
-} | {
-  successed: true,
-  type: typeof TYPES.PASSWORD_CREATE,
-  password: string,
 })
+
+type WatchServiceResponse =
+  | WatchServiceGet
+  | WatchServiceCreate
+  | WatchServiceOverride;
 
 export class Passworder {
   public static encrypt(key: string, salt: string, text: string) {
