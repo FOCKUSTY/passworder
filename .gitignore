@@ -1,5 +1,7 @@
 # My
 *.passworder
+.version
+passworder/
 
 # Logs
 logs

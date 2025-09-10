@@ -10,12 +10,7 @@ import {
 import { readFileSync } from "fs";
 
 import Terminal from "./terminal";
-import Passworder, { WatchServiceCreate, WatchServiceGet, WatchServiceOverride, WatchServiceResponse } from "./passworder";
-
-const terminal = new Terminal();
-
-terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${readFileSync(VERSION_FILE_PATH, "utf-8")}!`);
-terminal.print("Что ж, не будем медлить!");
+import Passworder, { type WatchServiceResponse } from "./passworder";
 
 class User {
   public readonly terminal: Terminal;
@@ -42,14 +37,15 @@ class User {
 
   public async execute(): Promise<unknown> {
     await this.passworder.init();
+    await this.passworder.writeGlobalKey(this.key);
 
     this.terminal.print("Мы сохранили Ваши данные");
 
-    return;
+    return this.ask();
   }
 
   public async ask() {
-    const service = await terminal.ask("Какой сервис Вы хотите посмотреть? ");
+    const service = await this.terminal.ask("Какой сервис Вы хотите посмотреть? ");
     const response = await this.passworder.watchService(service);
 
     this.currentService = service;
@@ -66,8 +62,8 @@ class User {
       return this.badPassword(response.getPassword);
     }
 
-    terminal.print("Удалось получится пароль, ура!");
-    terminal.print("Держите его, и никому не показывайте!");
+    this.terminal.print("Удалось получится пароль, ура!");
+    this.terminal.print("Держите его, и никому не показывайте!");
 
     return this.executePassword(response.password);
   }
@@ -78,9 +74,7 @@ class User {
     }
 
     if (response.successed) {
-      terminal.print("Вы успешно создали пароль!");
-      terminal.print("Мы сохранил его в файле " + LATEST_PASSWORD_FILE);
-
+      this.terminal.print("Вы успешно создали пароль!");
       return this.next();
     }
 
@@ -115,34 +109,35 @@ class User {
   }
 
   public exit(): void {
-    terminal.print("Спасибо, что используете " + PROGRAM_NAME);
-    terminal.print("Пока-пока!");
+    this.terminal.print("Спасибо, что используете " + PROGRAM_NAME);
+    this.terminal.print("Пока-пока!");
 
     return process.exit();
   }
 
-  protected savePassword(password: string) {
+  protected async savePassword(password: string) {
+    await this.clear();
     this.terminal.print("Мы сохранили этот пароль, как последний в " + LATEST_PASSWORD_FILE);
     return Passworder.writePassword(password);
   }
 
   protected async badPassword(getPassword: (key: string) => string | false): Promise<void> {
-    terminal.print("Не удалось получить пароль... :(");
-    terminal.print("Возможно, там используется другой ключ шифрования...");
+    this.terminal.print("Не удалось получить пароль... :(");
+    this.terminal.print("Возможно, там используется другой ключ шифрования...");
 
-    const next = await terminal.question("Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ");
+    const next = await this.terminal.question("Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ");
     
     if (!next) {
       return this.ask();
     }
 
-    const isGlobal = await terminal.question("Там точно используется глобавльный ключ шифрования? (Y/N) ");
+    const isGlobal = await this.terminal.question("Там точно используется глобавльный ключ шифрования? (Y/N) ");
     
     if (isGlobal) {
       return this.ask();
     }
 
-    const key = await terminal.ask("Введите другой ключ шифрования: ");
+    const key = await this.terminal.ask("Введите другой ключ шифрования: ");
     const password = getPassword(key);
 
     if (password) {
@@ -155,20 +150,15 @@ class User {
   }
 
   protected async executePassword(password: string) {
-    const showPassword = await terminal.question("Показать пароль? (Y/N) ");
+    const showPassword = await this.terminal.question("Показать пароль? (Y/N) ");
     
     if (showPassword) {
-      terminal.print("Держите Ваш пароль: " + password);
-      terminal.print("Мы очистим терминал через 5 секунд, копируйте быстрее!");
+      this.terminal.print("Держите Ваш пароль: " + password);
 
-      await this.clear();
-
-      terminal.print("Надеемся, что Вы успели скопировать пароль!");
-      terminal.print("Если это не так, то Вы можете посмотреть его в " + LATEST_PASSWORD_FILE);
+      this.terminal.print("Надеемся, что Вы успели скопировать пароль!");
     } else {
-      terminal.print("Нет? За Вами кто-то наблюдает?");
-      terminal.print(`Тогда мы сохраним пароль в файле ${LATEST_PASSWORD_FILE}!`);
-      terminal.print("Вы сможете посмотреть его, когда за Вами никто небудет смотреть!");
+      this.terminal.print("Нет? За Вами кто-то наблюдает?");
+      this.terminal.print("Вы сможете посмотреть пароль, когда за Вами никто небудет смотреть!");
     }
 
     await this.savePassword(password);
@@ -177,7 +167,7 @@ class User {
   }
 
   protected async next() {
-    const next = await terminal.question("Продолжить? (Y/N) ");
+    const next = await this.terminal.question("Продолжить? (Y/N) ");
     
     return next
       ? this.ask()
@@ -203,6 +193,9 @@ export class Program {
   ) {}
 
   public async execute(): Promise<User> {
+    this.terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${readFileSync(VERSION_FILE_PATH, "utf-8")}!`);
+    this.terminal.print("Что ж, не будем медлить!");
+
     const login = await this.terminal.ask("Введите логин: ");
     const key = await this.terminal.ask("Введите ключ шифрования: ");
 
@@ -212,4 +205,8 @@ export class Program {
   }
 }
 
-new Program().execute();
+(async () => {
+  const user = await new Program().execute();
+  
+  await user.execute();
+})();
