@@ -7,7 +7,8 @@ import {
   formatRussianWords,
   AVAILABLE_METHODS,
   AVAILABLE_METHODS_DESCRIPTION,
-  AVAILABLE_METHODS_INDEX_OFFSET
+  AVAILABLE_METHODS_INDEX_OFFSET,
+  REPOSITORY_URL
 } from "./constants";
 
 import { readFileSync } from "fs";
@@ -78,18 +79,15 @@ class User implements Methods {
   }
 
   public async watch() {
-    const service = await this.terminal.ask("Какой сервис Вы хотите посмотреть? ");
-    const response = await this.passworder.watchService(service);
-
-    this.currentService = service;
+    this.currentService = await this.terminal.ask("Какой сервис Вы хотите посмотреть? ");
+    const response = await this.passworder.watchService(this.currentService);
 
     this[PASSWORD_TYPES[response.type]](response);
   }
 
   public async change() {
-    const service = await this.terminal.ask("Какой сервис хотите изменить? ");
+    this.currentService = await this.terminal.ask("Какой сервис хотите изменить? ");
     const password = await this.terminal.ask("Введите пароль: ");
-    this.currentService = service;
 
     this.changePassword({
       successed: true,
@@ -99,14 +97,14 @@ class User implements Methods {
   }
 
   public async delete() {
-    const service = await this.terminal.ask("Какой сервис хотите удалить? ");
-    this.currentService = service;
+    this.currentService = await this.terminal.ask("Какой сервис хотите удалить? ");
 
-    const successed = await this.passworder.deleteService(service);
+    const successed = await this.passworder.deleteService(this.currentService);
     
     this.terminal.print(successed
       ? "Удалось удалить сервис"
       : "Не удалось удалить сервис, хотите сообщить об этом разработчику?"
+        + `${REPOSITORY_URL}/issues`
     );
 
     this.next();

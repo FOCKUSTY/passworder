@@ -10,6 +10,7 @@ export const DIR_PATH = join(process.env.APPDATA||".", PROGRAM_NAME);
 export const GLOBAL_FILE_NAME = "global.passworder"
 export const GLOBAL_FILE_PATH = join(DIR_PATH, GLOBAL_FILE_NAME);
 
+export const REPOSITORY_URL = "https://github.com/FOCKUSTY/passworder";
 export const AVAILABLE_PASSWORD_SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$";
 
 export const YES_ANSWERS = [
