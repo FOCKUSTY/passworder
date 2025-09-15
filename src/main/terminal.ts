@@ -5,29 +5,29 @@ import * as ReadLine from "readline/promises";
 import { YES_ANSWERS } from "./constants";
 
 type Props = Partial<{
-  clearCooldown: number
+  clearCooldown: number;
 }>;
 
 export class Terminal extends Console {
   public static readonly props: Required<Props> = {
-    clearCooldown: 5 * 1000
-  }
+    clearCooldown: 5 * 1000,
+  };
 
   public readonly props: Required<Props>;
 
   public constructor(
     public readonly terminal: ReadLine.Interface = ReadLine.createInterface({
       input: process.stdin,
-      output: process.stdout
+      output: process.stdout,
     }),
-    props?: Props
+    props?: Props,
   ) {
     super(process.stdout);
-    
+
     this.props = {
       ...props,
-      ...Terminal.props
-    }
+      ...Terminal.props,
+    };
   }
 
   public print<T>(...data: T[]): T[] {
@@ -41,14 +41,14 @@ export class Terminal extends Console {
   }
 
   public ask(query: string, options?: Abortable): Promise<string> {
-    return options 
+    return options
       ? this.terminal.question(query, options)
       : this.terminal.question(query);
-  };
+  }
 
   public close(): void {
     return this.terminal.close();
-  };
+  }
 }
 
 export default Terminal;

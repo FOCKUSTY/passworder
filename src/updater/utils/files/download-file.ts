@@ -12,7 +12,7 @@ const createDir = (path: string): string[] => {
     if (!filePath) {
       dirs.shift();
       return dirs;
-    };
+    }
 
     const path = parse(filePath).dir;
 

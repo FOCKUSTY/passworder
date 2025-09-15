@@ -5,14 +5,11 @@ import {
   createWriteStream,
   mkdirSync,
   rmSync,
-  existsSync
+  existsSync,
 } from "fs";
 import { join, parse, dirname } from "path";
 
-const LOCKED_FILES = [
-  "updater.exe",
-  "index.exe"
-];
+const LOCKED_FILES = ["updater.exe", "index.exe"];
 
 export const extractFile = async (path: string): Promise<void> => {
   if (!existsSync(path)) {
@@ -34,7 +31,7 @@ export const extractFile = async (path: string): Promise<void> => {
         return;
       }
 
-      if (header.name.includes('..') || header.name.startsWith('/')) {
+      if (header.name.includes("..") || header.name.startsWith("/")) {
         stream.resume();
         next();
         return;
@@ -53,7 +50,7 @@ export const extractFile = async (path: string): Promise<void> => {
       }
 
       const writer = createWriteStream(filePath);
-      
+
       writer.on("error", (error) => {
         stream.destroy(error);
         next(error);

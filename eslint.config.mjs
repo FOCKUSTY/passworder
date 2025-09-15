@@ -6,14 +6,14 @@ import { parser } from "typescript-eslint";
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    ignores: ["**/*.js", "**/*.d.ts", "**/dist/**", "**/node_modules/**"]
+    ignores: ["**/*.js", "**/*.d.ts", "**/dist/**", "**/node_modules/**"],
   },
 
   {
     languageOptions: {
       globals: globals.es2024,
-      parser: parser
-    }
+      parser: parser,
+    },
   },
 
   pluginJs.configs.recommended,
@@ -50,7 +50,7 @@ export default [
       "no-array-constructor": "off",
       "no-unused-expressions": "off",
       "no-unused-vars": "off",
-      "no-useless-constructor": "off"
-    }
-  }
+      "no-useless-constructor": "off",
+    },
+  },
 ];

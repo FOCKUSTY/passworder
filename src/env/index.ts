@@ -6,8 +6,10 @@ import { pseudoRandomBytes } from "crypto";
 (async () => {
   try {
     await mkdir(DIR_PATH, { recursive: true });
-  } catch { /* empty */ }
-  
+  } catch {
+    /* empty */
+  }
+
   try {
     await readFile(FILE_PATH);
     return process.exit();

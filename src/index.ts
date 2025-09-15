@@ -14,15 +14,15 @@ const INDEX_FILE = join(process.cwd(), "latest", "index.exe");
   }
 
   console.log("Starting updater from:", UPDATER_FILE);
-  
+
   try {
     await new Promise((resolve, reject) => {
       const updater = spawn(UPDATER_FILE, [], {
-        stdio: 'inherit',
-        cwd: process.cwd()
+        stdio: "inherit",
+        cwd: process.cwd(),
       });
 
-      updater.on('close', (code) => {
+      updater.on("close", (code) => {
         if (code === 0) {
           resolve(true);
         } else {
@@ -30,7 +30,7 @@ const INDEX_FILE = join(process.cwd(), "latest", "index.exe");
         }
       });
 
-      updater.on('error', (error) => {
+      updater.on("error", (error) => {
         console.error("Spawn error:", error);
         reject(error);
       });
@@ -41,8 +41,8 @@ const INDEX_FILE = join(process.cwd(), "latest", "index.exe");
 
     if (existsSync(SECURITY_FILE)) {
       spawn(SECURITY_FILE, [], {
-        stdio: 'inherit',
-        cwd: process.cwd()
+        stdio: "inherit",
+        cwd: process.cwd(),
       });
     } else {
       throw new Error("Security file is not exists.");
@@ -50,8 +50,8 @@ const INDEX_FILE = join(process.cwd(), "latest", "index.exe");
 
     if (existsSync(INDEX_FILE)) {
       spawn(INDEX_FILE, [], {
-        stdio: 'inherit',
-        cwd: process.cwd()
+        stdio: "inherit",
+        cwd: process.cwd(),
       });
     } else {
       console.error("Index file not found:", INDEX_FILE);

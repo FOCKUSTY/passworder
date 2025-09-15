@@ -8,7 +8,7 @@ import {
   AVAILABLE_METHODS,
   AVAILABLE_METHODS_DESCRIPTION,
   AVAILABLE_METHODS_INDEX_OFFSET,
-  REPOSITORY_URL
+  REPOSITORY_URL,
 } from "./constants";
 
 import { readFileSync } from "fs";
@@ -16,13 +16,16 @@ import { readFileSync } from "fs";
 import Terminal from "./terminal";
 import Passworder, { type WatchServiceResponse } from "./passworder";
 
-type Methods = Record<(typeof AVAILABLE_METHODS)[number], () => Promise<void>|void>;
+type Methods = Record<
+  (typeof AVAILABLE_METHODS)[number],
+  () => Promise<void> | void
+>;
 
 class User implements Methods {
   public readonly terminal: Terminal;
   public readonly passworder: Passworder;
   public readonly login: string;
-  public readonly key: string; 
+  public readonly key: string;
 
   public currentService: string = "none";
 
@@ -31,9 +34,9 @@ class User implements Methods {
     login,
     key,
   }: {
-    terminal: Terminal,
-    login: string,
-    key: string,
+    terminal: Terminal;
+    login: string;
+    key: string;
   }) {
     this.terminal = terminal;
     this.passworder = new Passworder(login);
@@ -51,13 +54,14 @@ class User implements Methods {
   }
 
   public async chooseMethod() {
-    const methods = AVAILABLE_METHODS.map((method, index) => 
-      `${method} (${+index+AVAILABLE_METHODS_INDEX_OFFSET}) — ${AVAILABLE_METHODS_DESCRIPTION[method]}`
+    const methods = AVAILABLE_METHODS.map(
+      (method, index) =>
+        `${method} (${+index + AVAILABLE_METHODS_INDEX_OFFSET}) — ${AVAILABLE_METHODS_DESCRIPTION[method]}`,
     ).join("\n");
-    
+
     this.terminal.print("Выберите подходящий для Вас метод:");
     this.terminal.print(methods);
-    
+
     const inputedMethod = await this.terminal.ask("");
     const method = this.validateMethod(inputedMethod);
     if (!method) {
@@ -71,7 +75,7 @@ class User implements Methods {
 
   public async list() {
     const services = this.passworder.list().join("\n");
-    
+
     this.terminal.print("Вот все сервисы с установленным паролем:");
     this.terminal.print(services);
 
@@ -79,32 +83,39 @@ class User implements Methods {
   }
 
   public async watch() {
-    this.currentService = await this.terminal.ask("Какой сервис Вы хотите посмотреть? ");
+    this.currentService = await this.terminal.ask(
+      "Какой сервис Вы хотите посмотреть? ",
+    );
     const response = await this.passworder.watchService(this.currentService);
 
     this[PASSWORD_TYPES[response.type]](response);
   }
 
   public async change() {
-    this.currentService = await this.terminal.ask("Какой сервис хотите изменить? ");
+    this.currentService = await this.terminal.ask(
+      "Какой сервис хотите изменить? ",
+    );
     const password = await this.terminal.ask("Введите пароль: ");
 
     this.changePassword({
       successed: true,
       type: "PASSWORD OVERRIDE",
-      password
+      password,
     });
   }
 
   public async delete() {
-    this.currentService = await this.terminal.ask("Какой сервис хотите удалить? ");
+    this.currentService = await this.terminal.ask(
+      "Какой сервис хотите удалить? ",
+    );
 
     const successed = await this.passworder.deleteService(this.currentService);
-    
-    this.terminal.print(successed
-      ? "Удалось удалить сервис"
-      : "Не удалось удалить сервис, хотите сообщить об этом разработчику?"
-        + `${REPOSITORY_URL}/issues`
+
+    this.terminal.print(
+      successed
+        ? "Удалось удалить сервис"
+        : "Не удалось удалить сервис, хотите сообщить об этом разработчику?" +
+            `${REPOSITORY_URL}/issues`,
     );
 
     this.next();
@@ -136,15 +147,17 @@ class User implements Methods {
     }
 
     this.terminal.print("У этого сервиса нет установленного пароля");
-    const authGeneratePassword = await this.terminal.question("Сгенерировать пароль автоматически? (Y/N) ");
-    
+    const authGeneratePassword = await this.terminal.question(
+      "Сгенерировать пароль автоматически? (Y/N) ",
+    );
+
     if (authGeneratePassword) {
       const password = await response.createPassword(true);
       return this.executePassword(password);
     }
 
     const password = await this.terminal.ask("Ну тогда вводите пароли сами: ");
-    
+
     this.passworder.addService(this.currentService, password);
     await this.savePassword(password);
 
@@ -161,7 +174,7 @@ class User implements Methods {
     }
 
     await this.savePassword(response.password);
-    
+
     return this.next();
   }
 
@@ -174,22 +187,30 @@ class User implements Methods {
 
   protected async savePassword(password: string) {
     await this.clear();
-    this.terminal.print("Мы сохранили этот пароль, как последний в " + LATEST_PASSWORD_FILE);
+    this.terminal.print(
+      "Мы сохранили этот пароль, как последний в " + LATEST_PASSWORD_FILE,
+    );
     return Passworder.writePassword(password);
   }
 
-  protected async badPassword(getPassword: (key: string) => string | false): Promise<void> {
+  protected async badPassword(
+    getPassword: (key: string) => string | false,
+  ): Promise<void> {
     this.terminal.print("Не удалось получить пароль... :(");
     this.terminal.print("Возможно, там используется другой ключ шифрования...");
 
-    const next = await this.terminal.question("Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ");
-    
+    const next = await this.terminal.question(
+      "Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ",
+    );
+
     if (!next) {
       return this.next();
     }
 
-    const isGlobal = await this.terminal.question("Там точно используется глобавльный ключ шифрования? (Y/N) ");
-    
+    const isGlobal = await this.terminal.question(
+      "Там точно используется глобавльный ключ шифрования? (Y/N) ",
+    );
+
     if (isGlobal) {
       return this.next();
     }
@@ -202,20 +223,24 @@ class User implements Methods {
     }
 
     this.badPassword(getPassword);
-    
+
     return;
   }
 
   protected async executePassword(password: string) {
-    const showPassword = await this.terminal.question("Показать пароль? (Y/N) ");
-    
+    const showPassword = await this.terminal.question(
+      "Показать пароль? (Y/N) ",
+    );
+
     if (showPassword) {
       this.terminal.print("Держите Ваш пароль: " + password);
 
       this.terminal.print("Надеемся, что Вы успели скопировать пароль!");
     } else {
       this.terminal.print("Нет? За Вами кто-то наблюдает?");
-      this.terminal.print("Вы сможете посмотреть пароль, когда за Вами никто небудет смотреть!");
+      this.terminal.print(
+        "Вы сможете посмотреть пароль, когда за Вами никто небудет смотреть!",
+      );
     }
 
     await this.savePassword(password);
@@ -225,16 +250,16 @@ class User implements Methods {
 
   protected async next() {
     const next = await this.terminal.question("Продолжить? (Y/N) ");
-    
-    return next
-      ? this.chooseMethod()
-      : this.exit();
+
+    return next ? this.chooseMethod() : this.exit();
   }
 
   protected clear() {
     const seconds = Math.floor(this.terminal.props.clearCooldown / 1000);
-    
-    this.terminal.print(`Мы очистим консоль через ${seconds} ${formatRussianWords(seconds, ["секунду", "секунды", "секунд"])}`);
+
+    this.terminal.print(
+      `Мы очистим консоль через ${seconds} ${formatRussianWords(seconds, ["секунду", "секунды", "секунд"])}`,
+    );
 
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -243,7 +268,9 @@ class User implements Methods {
     });
   }
 
-  private validateMethod(method: string): (typeof AVAILABLE_METHODS)[number]|false {
+  private validateMethod(
+    method: string,
+  ): (typeof AVAILABLE_METHODS)[number] | false {
     if ((AVAILABLE_METHODS as readonly string[]).includes(method)) {
       return method as (typeof AVAILABLE_METHODS)[number];
     }
@@ -252,17 +279,17 @@ class User implements Methods {
       return false;
     }
 
-    return AVAILABLE_METHODS[+method-AVAILABLE_METHODS_INDEX_OFFSET] ?? false;
+    return AVAILABLE_METHODS[+method - AVAILABLE_METHODS_INDEX_OFFSET] ?? false;
   }
 }
 
 export class Program {
-  public constructor(
-    public readonly terminal: Terminal = new Terminal()
-  ) {}
+  public constructor(public readonly terminal: Terminal = new Terminal()) {}
 
   public async execute(): Promise<User> {
-    this.terminal.print(`Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${readFileSync(VERSION_FILE_PATH, "utf-8")}!`);
+    this.terminal.print(
+      `Привет, пользователь, Вас приветствует ${PROGRAM_NAME} версии ${readFileSync(VERSION_FILE_PATH, "utf-8")}!`,
+    );
     this.terminal.print("Что ж, не будем медлить!");
 
     const login = await this.terminal.ask("Введите логин: ");
@@ -276,6 +303,6 @@ export class Program {
 
 (async () => {
   const user = await new Program().execute();
-  
+
   await user.execute();
 })();
