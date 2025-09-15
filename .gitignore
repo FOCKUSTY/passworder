@@ -2,6 +2,7 @@
 *.passworder
 .version
 passworder/
+log/
 
 # Logs
 logs

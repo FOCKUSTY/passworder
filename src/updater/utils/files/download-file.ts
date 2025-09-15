@@ -1,29 +1,13 @@
 import https from "https";
 
 import { rm } from "node:fs/promises";
-import { existsSync, createWriteStream, mkdirSync } from "node:fs";
+import { createWriteStream, existsSync, mkdirSync } from "node:fs";
 
 import { parse } from "path";
 
-const createDir = (path: string): string[] => {
-  const dirs: string[] = [];
+import Loggers from "../../../logger";
 
-  const create = (filePath: string = path) => {
-    if (!filePath) {
-      dirs.shift();
-      return dirs;
-    }
-
-    const path = parse(filePath).dir;
-
-    if (existsSync(path)) return dirs;
-
-    dirs.unshift(path);
-    return create(path);
-  };
-
-  return create(path);
-};
+const { Updater } = new Loggers();
 
 export const downloadFile = async (
   url: string,
@@ -34,23 +18,33 @@ export const downloadFile = async (
   return new Promise<boolean | unknown>((resolve, reject) => {
     rm(dirPath, { force: true, recursive: true })
       .then(() => {
-        createDir(path).forEach((path) => {
-          mkdirSync(path);
-        });
+        Updater.execute(`Проверка пути ${path}`, { level: "debug" });
+        if (!existsSync(path)) {
+          Updater.execute(`Создание пути ${path}`, { level: "debug" });
+          mkdirSync(path, { recursive: true });
+        }
 
+        Updater.execute("Создание стриминга файла", { level: "debug" });
         const file = createWriteStream(path);
 
         https.get(url, (response) => {
-          console.log(`downloading into ${path}...`);
+          Updater.execute(`Установка файла в ${path}`, { level: "info" });
           response.pipe(file);
 
           file.on("finish", () => {
+            Updater.execute("Файл был успешно установлен", { level: "info" });
             console.log("downloaded!");
             file.close();
             resolve(true);
           });
 
-          file.on("error", reject);
+          file.on("error", (error) => {
+            Updater.execute([
+              "Произошла ошибка при установке файла",
+              {error}
+            ], { level: "err" });
+            reject(error);
+          });
         });
       })
       .catch(reject);

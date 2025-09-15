@@ -13,19 +13,38 @@ import {
   VERSION_FILE_NAME,
 } from "./utils";
 
+import Loggers from "../logger";
+
+const { Updater } = new Loggers();
+
 export class AutoUpdater {
   private readonly versionFilePath = join(".", VERSION_FILE_NAME);
 
   public async execute() {
     const folderPath = join(".", LATEST_FILE_NAME);
     const filePath = join(folderPath, RELEASE_FILE_NAME);
-
+    
+    Updater.execute("Проверка начилия обновлений...", { level: "info" });
+    Updater.execute("Поиск релиза...", { level: "info" });
+    
     const url = await this.fetchRelease();
+    if (!url) {
+      Updater.execute("Релиз не был найден", { level: "info" });
+      Updater.execute([
+        "Ошибка, релиз не был найден", {
+        url
+      }], { level: "err" });    
+      
+      return;
+    };
 
-    if (!url) return;
-
-    await this.downloadRelease(url, filePath);
-    await this.extractFile(filePath);
+    try {
+      await this.downloadRelease(url, filePath);
+      await this.extractFile(filePath);
+    } catch (error) {
+      Updater.execute(["Произошла ошибки при установке или распаковки файлов", error], { level: "err" });
+      throw Updater.execute("Произошла какая-то ошибка, подробнее в логах", { level: "err" });
+    }
 
     return process.exit();
   }
@@ -53,9 +72,13 @@ export class AutoUpdater {
 
   private async extractFile(path: string): Promise<true> {
     return new Promise<true>((resolve) => {
+      Updater.execute("Распаковка файлов...", { level: "info" });
       extractFile(path);
 
-      setTimeout(() => resolve(true), 1000);
+      setTimeout(() => {
+        Updater.execute("Распаковка завершена", { level: "info" });
+        resolve(true);
+      }, 1000);
     });
   }
 
@@ -64,13 +87,18 @@ export class AutoUpdater {
     path: string,
   ): Promise<boolean | unknown> {
     return new Promise<boolean | unknown>((resolve, reject) => {
+      Updater.execute("Установка релиза...", { level: "info" });
       downloadFile(url, path)
         .then(() => {
           setTimeout(() => {
+            Updater.execute("Установка завершена", { level: "info" });
             resolve(true);
           }, 1000);
         })
-        .catch(reject);
+        .catch(err => {
+          Updater.execute(["Произошла какая-то ошибка", {err}], { level: "err" });
+          reject(err);
+        });
     });
   }
 }
