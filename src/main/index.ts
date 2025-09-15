@@ -15,7 +15,9 @@ import { readFileSync } from "fs";
 import Terminal from "./terminal";
 import Passworder, { type WatchServiceResponse } from "./passworder";
 
-class User {
+type Methods = Record<(typeof AVAILABLE_METHODS)[number], () => Promise<void>|void>;
+
+class User implements Methods {
   public readonly terminal: Terminal;
   public readonly passworder: Passworder;
   public readonly login: string;
@@ -84,7 +86,33 @@ class User {
     this[PASSWORD_TYPES[response.type]](response);
   }
 
-  public async get(response: WatchServiceResponse) {
+  public async change() {
+    const service = await this.terminal.ask("Какой сервис хотите изменить? ");
+    const password = await this.terminal.ask("Введите пароль: ");
+    this.currentService = service;
+
+    this.changePassword({
+      successed: true,
+      type: "PASSWORD OVERRIDE",
+      password
+    });
+  }
+
+  public async delete() {
+    const service = await this.terminal.ask("Какой сервис хотите удалить? ");
+    this.currentService = service;
+
+    const successed = await this.passworder.deleteService(service);
+    
+    this.terminal.print(successed
+      ? "Удалось удалить сервис"
+      : "Не удалось удалить сервис, хотите сообщить об этом разработчику?"
+    );
+
+    this.next();
+  }
+
+  public async getPassword(response: WatchServiceResponse) {
     if (response.type !== TYPES.PASSWORD_GET) {
       throw new Error("Can not execute invalid type.");
     }
@@ -99,7 +127,7 @@ class User {
     return this.executePassword(response.password);
   }
 
-  public async create(response: WatchServiceResponse) {
+  public async createPassword(response: WatchServiceResponse) {
     if (response.type !== TYPES.PASSWORD_CREATE) {
       throw new Error("Can not execute invalid type.");
     }
@@ -125,7 +153,7 @@ class User {
     return this.next();
   }
 
-  public async change(response: WatchServiceResponse) {
+  public async changePassword(response: WatchServiceResponse) {
     if (response.type !== TYPES.PASSWORD_OVERRIDE) {
       throw new Error("Can not execute invalid type.");
     }

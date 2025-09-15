@@ -35,19 +35,23 @@ export const TYPES = {
 } as const;
 
 export const PASSWORD_TYPES = {
-  [TYPES.PASSWORD_CREATE]: "create",
-  [TYPES.PASSWORD_OVERRIDE]: "change",
-  [TYPES.PASSWORD_GET]: "get"
+  [TYPES.PASSWORD_CREATE]: "createPassword",
+  [TYPES.PASSWORD_OVERRIDE]: "changePassword",
+  [TYPES.PASSWORD_GET]: "getPassword"
 } as const;
 
 export const AVAILABLE_METHODS = [
   "watch",
-  "list"
+  "list",
+  "delete",
+  "change"
 ] as const;
 
 export const AVAILABLE_METHODS_DESCRIPTION: Record<(typeof AVAILABLE_METHODS)[number], string> = {
   list: "Список всех сервисов",
-  watch: "Посмотреть конкретный сервис"
+  watch: "Посмотреть конкретный сервис",
+  delete: "Удалить сервис",
+  change: "Изменить сервис"
 }
 
 export const AVAILABLE_METHODS_INDEX_OFFSET = 1;

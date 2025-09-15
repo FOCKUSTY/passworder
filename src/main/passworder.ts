@@ -195,6 +195,20 @@ export class Passworder {
     return encrypted;
   }
 
+  public async deleteService(service: string) {
+    const exists = this._file.passwords[this.login][service];
+    
+    if (!exists) {
+      return false;
+    }
+
+    delete this._file.passwords[this.login][service];
+    
+    await this.writeFile(this._file);
+
+    return true;
+  }
+
   public async watchService(service: string, password?: string): Promise<WatchServiceResponse> {
     if (!this._file.global) throw new Error("Global key is null.");
     
