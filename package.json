@@ -38,6 +38,9 @@
   },
   "homepage": "https://github.com/FOCKUSTY/passworder#readme",
   "description": "",
+  "engines": {
+    "node": ">=18.13.0"
+  },
   "devDependencies": {
     "@types/node": "^24.3.1",
     "@types/tar-stream": "^3.1.4",
