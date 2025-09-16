@@ -38,6 +38,7 @@
     "node": ">=18.13.0"
   },
   "devDependencies": {
+    "@types/copy-paste": "^2.1.0",
     "@types/node": "^24.3.1",
     "@types/tar-stream": "^3.1.4",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
@@ -48,6 +49,7 @@
     "typescript-eslint": "^8.42.0"
   },
   "dependencies": {
+    "copy-paste": "^2.2.0",
     "fock-logger": "^4.0.1-c",
     "random-js": "^2.1.0",
     "tar-stream": "^3.1.7"
