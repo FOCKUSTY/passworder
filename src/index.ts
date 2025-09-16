@@ -19,7 +19,8 @@ const { Updater, Env, Main } = new Loggers();
 
   try {
     await new Promise((resolve, reject) => {
-      Updater.execute("Запуск " + UPDATER_FILE, { level: "debug" });
+      Updater.execute("Запуск " + UPDATER_FILE, { level: "debug", write: true });
+
       const updater = spawn(UPDATER_FILE, [], {
         stdio: "inherit",
         cwd: process.cwd(),
@@ -29,12 +30,14 @@ const { Updater, Env, Main } = new Loggers();
         if (code === 0) {
           resolve(true);
         } else {
-          reject(Env.execute([new Error(`Программа завершена с кодом ${code}`)], { level: "err" }));
+          Env.execute([new Error(`Программа завершена с кодом ${code}`)], { level: "err" });
+          reject(false);
         }
       });
 
       updater.on("error", (error) => {
-        reject(Env.execute(["Spawn-ошибка", { error }], { level: "err" }));
+        Env.execute(["Spawn-ошибка", { error }], { level: "err" });
+        reject(false);
       });
     });
 
@@ -62,6 +65,7 @@ const { Updater, Env, Main } = new Loggers();
       throw Env.execute([new Error("index файла не существует: " + INDEX_FILE)], { level: "err" });
     }
   } catch (error) {
-    console.error("Error:", error);
+    Env.execute([{error}], { level: "err" });
+    process.exit();
   }
 })();
