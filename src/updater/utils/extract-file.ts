@@ -11,7 +11,7 @@ import { join, parse, dirname } from "path";
 
 const LOCKED_FILES = ["updater.exe", "index.exe"];
 
-import Loggers from "../../../logger";
+import Loggers from "../../logger";
 
 const { Updater } = new Loggers();
 

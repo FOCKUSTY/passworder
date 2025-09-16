@@ -1,17 +1,25 @@
 import { join } from "path";
 
-export const PROGRAM_NAME = "passworder";
-export const FILE_NAME = ".passworder";
-export const FILE_PATH = join(PROGRAM_NAME, ".passworder");
-export const LATEST_PASSWORD_FILE = join(
-  PROGRAM_NAME,
-  "latest-password" + FILE_NAME,
-);
-export const VERSION_FILE_PATH = join(".", ".version");
+/* env */
 
+export const PROGRAM_NAME = "passworder";
 export const DIR_PATH = join(process.env.APPDATA || ".", PROGRAM_NAME);
+
+export const PASSWORDER_FILE_NAME = "global.passworder";
+export const PASSWORDER_FILE_PATH = join(DIR_PATH, PASSWORDER_FILE_NAME);
+
+/* main */
+
 export const GLOBAL_FILE_NAME = "global.passworder";
 export const GLOBAL_FILE_PATH = join(DIR_PATH, GLOBAL_FILE_NAME);
+
+export const MAIN_FILE_NAME = ".passworder";
+export const MAIN_FILE_PATH = join(PROGRAM_NAME, ".passworder");
+export const LATEST_PASSWORD_FILE = join(
+  PROGRAM_NAME,
+  "latest-password" + MAIN_FILE_NAME,
+);
+export const VERSION_FILE_PATH = join(".", ".version");
 
 export const REPOSITORY_URL = "https://github.com/FOCKUSTY/passworder";
 export const AVAILABLE_PASSWORD_SYMBOLS =
@@ -24,20 +32,19 @@ export const STATUSES = {
   createdNow: "Created now.",
 } as const;
 
-export const TYPES = {
+export const PASSWORDER_RESPONSE = {
   PASSWORD_CREATE: "PASSWORD CREATE",
   PASSWORD_GET: "PASSWORD GET",
   PASSWORD_OVERRIDE: "PASSWORD OVERRIDE",
 } as const;
 
-export const PASSWORD_TYPES = {
-  [TYPES.PASSWORD_CREATE]: "createPassword",
-  [TYPES.PASSWORD_OVERRIDE]: "changePassword",
-  [TYPES.PASSWORD_GET]: "getPassword",
+export const PASSWORDER_METHODS = {
+  [PASSWORDER_RESPONSE.PASSWORD_CREATE]: "createPassword",
+  [PASSWORDER_RESPONSE.PASSWORD_OVERRIDE]: "changePassword",
+  [PASSWORDER_RESPONSE.PASSWORD_GET]: "getPassword",
 } as const;
 
 export const AVAILABLE_METHODS = ["watch", "list", "delete", "change"] as const;
-
 export const AVAILABLE_METHODS_DESCRIPTION: Record<
   (typeof AVAILABLE_METHODS)[number],
   string
@@ -67,3 +74,15 @@ export const formatRussianWords = (
   else if (firstChar < 5) return stage[1];
   else return stage[2] || stage[1];
 };
+
+/* updater */
+
+export const RELEASE_FILE_NAME = "release.tar.gz";
+export const LATEST_FILE_NAME = "latest";
+export const VERSION_FILE_NAME = ".version";
+
+export const RELEASE_URL =
+  "https://api.github.com/repos/FOCKUSTY/passworder/releases/latest";
+
+export const getDownloadUrl = (version: string): string =>
+  `https://github.com/FOCKUSTY/passworder/releases/download/${version}/${RELEASE_FILE_NAME}`;

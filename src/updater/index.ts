@@ -6,12 +6,15 @@ import { readFile, writeFile } from "fs/promises";
 import {
   downloadFile,
   extractFile,
+} from "./utils";
+
+import {
   getDownloadUrl,
   LATEST_FILE_NAME,
   RELEASE_FILE_NAME,
   RELEASE_URL,
-  VERSION_FILE_NAME,
-} from "./utils";
+  VERSION_FILE_NAME
+} from "../constants";
 
 import Loggers from "../logger";
 

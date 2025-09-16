@@ -13,11 +13,11 @@ import { Random } from "random-js";
 
 import {
   LATEST_PASSWORD_FILE,
-  TYPES,
+  PASSWORDER_RESPONSE,
   AVAILABLE_PASSWORD_SYMBOLS,
-  FILE_PATH,
+  MAIN_FILE_PATH,
   GLOBAL_FILE_PATH,
-} from "./constants";
+} from "../constants";
 
 const GLOBAL_KEY = readFileSync(GLOBAL_FILE_PATH, "utf-8");
 const random = new Random();
@@ -25,35 +25,35 @@ const random = new Random();
 export type WatchServiceGet =
   | {
       successed: true;
-      type: typeof TYPES.PASSWORD_GET;
+      type: typeof PASSWORDER_RESPONSE.PASSWORD_GET;
       password: string;
     }
   | {
       successed: false;
-      type: typeof TYPES.PASSWORD_GET;
+      type: typeof PASSWORDER_RESPONSE.PASSWORD_GET;
       getPassword: (key: string) => string | false;
     };
 
 export type WatchServiceCreate =
   | {
       successed: false;
-      type: typeof TYPES.PASSWORD_CREATE;
+      type: typeof PASSWORDER_RESPONSE.PASSWORD_CREATE;
       createPassword: (pass: string | true) => Promise<string>;
     }
   | {
       successed: true;
-      type: typeof TYPES.PASSWORD_CREATE;
+      type: typeof PASSWORDER_RESPONSE.PASSWORD_CREATE;
       password: string;
     };
 
 export type WatchServiceOverride =
   | {
       successed: false;
-      type: typeof TYPES.PASSWORD_OVERRIDE;
+      type: typeof PASSWORDER_RESPONSE.PASSWORD_OVERRIDE;
     }
   | {
       successed: true;
-      type: typeof TYPES.PASSWORD_OVERRIDE;
+      type: typeof PASSWORDER_RESPONSE.PASSWORD_OVERRIDE;
       password: string;
     };
 
@@ -115,14 +115,14 @@ export class Passworder {
   }
 
   public static async readFile() {
-    return readFile(FILE_PATH, "utf-8");
+    return readFile(MAIN_FILE_PATH, "utf-8");
   }
 
   public static async createFile(global: string | null = null) {
-    await mkdir(parse(FILE_PATH).dir, { recursive: true });
+    await mkdir(parse(MAIN_FILE_PATH).dir, { recursive: true });
 
     return writeFile(
-      FILE_PATH,
+      MAIN_FILE_PATH,
       JSON.stringify(
         {
           global: global,
@@ -153,20 +153,20 @@ export class Passworder {
   };
 
   public constructor(public readonly login: string) {
-    mkdirSync(parse(FILE_PATH).dir, { recursive: true });
+    mkdirSync(parse(MAIN_FILE_PATH).dir, { recursive: true });
 
     try {
-      this._file = JSON.parse(readFileSync(FILE_PATH, "utf-8"));
+      this._file = JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8"));
     } catch {
       writeFileSync(
-        FILE_PATH,
+        MAIN_FILE_PATH,
         JSON.stringify({
           global: null,
           passwords: {},
         }),
       );
 
-      this._file = JSON.parse(readFileSync(FILE_PATH, "utf-8"));
+      this._file = JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8"));
     }
 
     if (!this._file.passwords[login]) {
@@ -283,7 +283,7 @@ export class Passworder {
         if (!decrypted) {
           return {
             successed: false,
-            type: TYPES.PASSWORD_GET,
+            type: PASSWORDER_RESPONSE.PASSWORD_GET,
             getPassword: (key: string): string | false => {
               const decryptedSecondAttempt = Passworder.decrypt(
                 key,
@@ -302,14 +302,14 @@ export class Passworder {
 
         return {
           successed: true,
-          type: TYPES.PASSWORD_GET,
+          type: PASSWORDER_RESPONSE.PASSWORD_GET,
           password: decrypted,
         };
       }
 
       return {
         successed: false,
-        type: TYPES.PASSWORD_CREATE,
+        type: PASSWORDER_RESPONSE.PASSWORD_CREATE,
         createPassword: async (pass: string | true) => {
           if (!this._file.global) throw new Error("Global key is null.");
 
@@ -355,7 +355,7 @@ export class Passworder {
       if (decryptedServicePassword !== password) {
         return {
           successed: false,
-          type: TYPES.PASSWORD_OVERRIDE,
+          type: PASSWORDER_RESPONSE.PASSWORD_OVERRIDE,
         };
       }
 
@@ -363,7 +363,7 @@ export class Passworder {
 
       return {
         successed: true,
-        type: TYPES.PASSWORD_OVERRIDE,
+        type: PASSWORDER_RESPONSE.PASSWORD_OVERRIDE,
         password: password,
       };
     }
@@ -372,7 +372,7 @@ export class Passworder {
 
     return {
       successed: true,
-      type: TYPES.PASSWORD_CREATE,
+      type: PASSWORDER_RESPONSE.PASSWORD_CREATE,
       password: password,
     };
   }
@@ -388,7 +388,7 @@ export class Passworder {
   }
 
   private writeFile(file: typeof this._file) {
-    return writeFile(FILE_PATH, JSON.stringify(file, undefined, 2));
+    return writeFile(MAIN_FILE_PATH, JSON.stringify(file, undefined, 2));
   }
 }
 

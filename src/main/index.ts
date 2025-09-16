@@ -1,15 +1,15 @@
 import {
   LATEST_PASSWORD_FILE,
   PROGRAM_NAME,
-  TYPES,
+  PASSWORDER_RESPONSE,
   VERSION_FILE_PATH,
-  PASSWORD_TYPES,
+  PASSWORDER_METHODS,
   formatRussianWords,
   AVAILABLE_METHODS,
   AVAILABLE_METHODS_DESCRIPTION,
   AVAILABLE_METHODS_INDEX_OFFSET,
   REPOSITORY_URL,
-} from "./constants";
+} from "../constants";
 
 import { readFileSync } from "fs";
 
@@ -88,7 +88,7 @@ class User implements Methods {
     );
     const response = await this.passworder.watchService(this.currentService);
 
-    this[PASSWORD_TYPES[response.type]](response);
+    this[PASSWORDER_METHODS[response.type]](response);
   }
 
   public async change() {
@@ -122,7 +122,7 @@ class User implements Methods {
   }
 
   public async getPassword(response: WatchServiceResponse) {
-    if (response.type !== TYPES.PASSWORD_GET) {
+    if (response.type !== PASSWORDER_RESPONSE.PASSWORD_GET) {
       throw new Error("Can not execute invalid type.");
     }
 
@@ -137,7 +137,7 @@ class User implements Methods {
   }
 
   public async createPassword(response: WatchServiceResponse) {
-    if (response.type !== TYPES.PASSWORD_CREATE) {
+    if (response.type !== PASSWORDER_RESPONSE.PASSWORD_CREATE) {
       throw new Error("Can not execute invalid type.");
     }
 
@@ -165,7 +165,7 @@ class User implements Methods {
   }
 
   public async changePassword(response: WatchServiceResponse) {
-    if (response.type !== TYPES.PASSWORD_OVERRIDE) {
+    if (response.type !== PASSWORDER_RESPONSE.PASSWORD_OVERRIDE) {
       throw new Error("Can not execute invalid type.");
     }
 

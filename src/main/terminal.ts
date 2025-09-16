@@ -2,7 +2,7 @@ import { Console } from "console";
 import { Abortable } from "events";
 import * as ReadLine from "readline/promises";
 
-import { YES_ANSWERS } from "./constants";
+import { YES_ANSWERS } from "../constants";
 
 type Props = Partial<{
   clearCooldown: number;

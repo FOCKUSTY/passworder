@@ -1,6 +1,6 @@
 import { readFile, mkdir, writeFile } from "fs/promises";
 
-import { DIR_PATH, FILE_PATH } from "./constants";
+import { DIR_PATH, GLOBAL_FILE_PATH } from "../constants";
 import { pseudoRandomBytes } from "crypto";
 
 (async () => {
@@ -11,11 +11,11 @@ import { pseudoRandomBytes } from "crypto";
   }
 
   try {
-    await readFile(FILE_PATH);
+    await readFile(GLOBAL_FILE_PATH);
     return process.exit();
   } catch {
     const global = pseudoRandomBytes(6 ** 6).toString("ascii");
-    await writeFile(FILE_PATH, global, "utf-8");
+    await writeFile(GLOBAL_FILE_PATH, global, "utf-8");
   }
 
   return process.exit();

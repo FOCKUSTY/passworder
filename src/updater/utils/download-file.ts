@@ -5,7 +5,7 @@ import { createWriteStream, existsSync, mkdirSync } from "node:fs";
 
 import { parse } from "path";
 
-import Loggers from "../../../logger";
+import Loggers from "../../logger";
 
 const { Updater } = new Loggers();
 

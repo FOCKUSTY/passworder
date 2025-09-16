@@ -1,6 +1,8 @@
 import { mkdirSync } from "fs";
 import { join } from "path";
-import Logger, { Configurator, Colors } from "fock-logger";
+
+import Configurator from "fock-logger/config";
+import { Colors } from "fock-logger/colors";
 
 export const PROGRAM_NAME = "passworder";
 export const DIR_PATH = join(process.env.APPDATA || ".", PROGRAM_NAME);
@@ -12,12 +14,13 @@ export const FOCK_LOGGER__DIR = join(DIR_PATH, "fock-logger");
   new Configurator({
     dir: FOCK_LOGGER__DIR,
     create_file: true,
+    overwrite_file: true,
     logging: true,
     levels: {
       debug: 0,
       warn: 1,
       info: 2,
-      err: 3
+      error: 3
     },
     level: "info",
     colors: [
@@ -26,6 +29,8 @@ export const FOCK_LOGGER__DIR = join(DIR_PATH, "fock-logger");
     ]
   });
 })();
+
+import Logger from "fock-logger";
 
 export class Loggers {
   public readonly Updater = new Logger("Updater", {
