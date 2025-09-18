@@ -15,6 +15,7 @@ export const FOCK_LOGGER__DIR = join(DIR_PATH, "fock-logger");
     dir: FOCK_LOGGER__DIR,
     create_file: true,
     overwrite_file: true,
+    date: false,
     logging: true,
     levels: {
       debug: 0,
