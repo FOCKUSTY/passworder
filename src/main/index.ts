@@ -21,6 +21,9 @@ type Methods = Record<
   () => Promise<void> | void
 >;
 
+const JOIN = "\n";
+const LIST_PREFIX = JOIN + " — ";
+
 class User implements Methods {
   public readonly terminal: Terminal;
   public readonly passworder: Passworder;
@@ -57,10 +60,9 @@ class User implements Methods {
     const methods = AVAILABLE_METHODS.map(
       (method, index) =>
         `${method} (${+index + AVAILABLE_METHODS_INDEX_OFFSET}) — ${AVAILABLE_METHODS_DESCRIPTION[method]}`,
-    ).join("\n");
+    ).join(LIST_PREFIX);
 
-    this.terminal.print("Выберите подходящий для Вас метод:");
-    this.terminal.print(methods);
+    this.terminal.print("Выберите подходящий для Вас метод:" + LIST_PREFIX + methods);
 
     const inputedMethod = await this.terminal.ask("");
     const method = this.validateMethod(inputedMethod);
@@ -74,10 +76,16 @@ class User implements Methods {
   }
 
   public async list() {
-    const services = this.passworder.list().join("\n");
+    const services = this.passworder.list();
+
+    if (services.length === 0) {
+      this.terminal.print("Мы не смогли найти никаких сервисов...");
+      this.chooseMethod();
+      return;
+    }
 
     this.terminal.print("Вот все сервисы с установленным паролем:");
-    this.terminal.print(services);
+    this.terminal.print(services.join(JOIN));
 
     this.chooseMethod();
   }
