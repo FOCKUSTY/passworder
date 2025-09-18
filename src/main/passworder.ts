@@ -40,7 +40,7 @@ type File = {
 const defaultFile: File = {
   global: null,
   cooldown: 5,
-  passwords: {}
+  passwords: {},
 };
 
 export type WatchServiceGet =
@@ -167,7 +167,7 @@ export class Passworder {
     try {
       this._file = {
         ...defaultFile,
-        ...JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8"))
+        ...JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8")),
       };
     } catch {
       writeFileSync(
@@ -180,10 +180,10 @@ export class Passworder {
 
       this._file = {
         ...defaultFile,
-        ...JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8"))
+        ...JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8")),
       };
     }
-    
+
     if (this._file.cooldown < 2) {
       throw new Error("Задержка не может быть меньше 2 секунд");
     }
@@ -402,7 +402,7 @@ export class Passworder {
     };
   }
 
-  public changeCooldown(cooldown: number): true|Error {
+  public changeCooldown(cooldown: number): true | Error {
     if (isNaN(cooldown)) {
       return new Error("Задержка должна быть числом");
     }
@@ -417,7 +417,7 @@ export class Passworder {
 
     this._file.cooldown = Math.floor(cooldown);
     this.writeFile(this._file);
-    
+
     return true;
   }
 

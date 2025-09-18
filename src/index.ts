@@ -12,14 +12,20 @@ const { Updater, Env, Main } = new Loggers();
 
 (async () => {
   if (!existsSync(UPDATER_FILE)) {
-    throw Env.execute([new Error("Файл обновления не был найден: " + UPDATER_FILE)], { level: "err" });
+    throw Env.execute(
+      [new Error("Файл обновления не был найден: " + UPDATER_FILE)],
+      { level: "err" },
+    );
   }
 
   Env.execute("Начало обнолвения с " + UPDATER_FILE, { level: "info" });
 
   try {
     await new Promise((resolve, reject) => {
-      Updater.execute("Запуск " + UPDATER_FILE, { level: "debug", write: true });
+      Updater.execute("Запуск " + UPDATER_FILE, {
+        level: "debug",
+        write: true,
+      });
 
       const updater = spawn(UPDATER_FILE, [], {
         stdio: "inherit",
@@ -30,7 +36,9 @@ const { Updater, Env, Main } = new Loggers();
         if (code === 0) {
           resolve(true);
         } else {
-          Env.execute([new Error(`Программа завершена с кодом ${code}`)], { level: "err" });
+          Env.execute([new Error(`Программа завершена с кодом ${code}`)], {
+            level: "err",
+          });
           reject(false);
         }
       });
@@ -41,7 +49,9 @@ const { Updater, Env, Main } = new Loggers();
       });
     });
 
-    Env.execute("Автообнолвение заверешного, запуск главного файла...", { level: "debug" });
+    Env.execute("Автообнолвение заверешного, запуск главного файла...", {
+      level: "debug",
+    });
 
     console.clear();
 
@@ -52,20 +62,26 @@ const { Updater, Env, Main } = new Loggers();
         cwd: process.cwd(),
       });
     } else {
-      throw Env.execute([new Error("security файла не существует: " + SECURITY_FILE)], { level: "err" });
+      throw Env.execute(
+        [new Error("security файла не существует: " + SECURITY_FILE)],
+        { level: "err" },
+      );
     }
 
-    Env.execute("Поиск главного файла " + INDEX_FILE)
+    Env.execute("Поиск главного файла " + INDEX_FILE);
     if (existsSync(INDEX_FILE)) {
       spawn(INDEX_FILE, [], {
         stdio: "inherit",
         cwd: process.cwd(),
       });
     } else {
-      throw Env.execute([new Error("index файла не существует: " + INDEX_FILE)], { level: "err" });
+      throw Env.execute(
+        [new Error("index файла не существует: " + INDEX_FILE)],
+        { level: "err" },
+      );
     }
   } catch (error) {
-    Env.execute([{error}], { level: "err" });
+    Env.execute([{ error }], { level: "err" });
     process.exit();
   }
 })();

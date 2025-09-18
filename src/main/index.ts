@@ -45,7 +45,7 @@ class User implements Methods {
     this.passworder = new Passworder(login);
     this.login = login;
     this.key = key;
-   
+
     this.terminal.clearCooldown = this.passworder.cooldown;
   }
 
@@ -64,7 +64,9 @@ class User implements Methods {
         `${method} (${+index + AVAILABLE_METHODS_INDEX_OFFSET}) — ${AVAILABLE_METHODS_DESCRIPTION[method]}`,
     ).join(LIST_PREFIX);
 
-    this.terminal.print("Выберите подходящий для Вас метод:" + LIST_PREFIX + methods);
+    this.terminal.print(
+      "Выберите подходящий для Вас метод:" + LIST_PREFIX + methods,
+    );
 
     const inputedMethod = await this.terminal.ask("");
     const method = this.validateMethod(inputedMethod);
@@ -125,7 +127,7 @@ class User implements Methods {
       successed
         ? "Удалось удалить сервис"
         : "Не удалось удалить сервис, хотите сообщить об этом разработчику?" +
-          `${REPOSITORY_URL}/issues`,
+            `${REPOSITORY_URL}/issues`,
     );
 
     this.next();
@@ -135,8 +137,10 @@ class User implements Methods {
     if (!isRetry) {
       this.terminal.print("Задержка должна быть число, от 2 до 20 секунд");
     }
-    
-    const cooldown = await this.terminal.ask("Какую задержку вы хотите поставить? ");
+
+    const cooldown = await this.terminal.ask(
+      "Какую задержку вы хотите поставить? ",
+    );
     const newCooldown = +cooldown;
     const successed = this.passworder.changeCooldown(newCooldown);
 
@@ -147,11 +151,12 @@ class User implements Methods {
     }
 
     this.terminal.clearCooldown = newCooldown;
-    this.terminal.print("Отлично, теперь новая задержка: " + newCooldown + " " + formatRussianWords(newCooldown, [
-      "секунда",
-      "секунды",
-      "секунд"
-    ]));
+    this.terminal.print(
+      "Отлично, теперь новая задержка: " +
+        newCooldown +
+        " " +
+        formatRussianWords(newCooldown, ["секунда", "секунды", "секунд"]),
+    );
 
     this.next();
   }

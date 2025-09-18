@@ -39,10 +39,10 @@ export const downloadFile = async (
           });
 
           file.on("error", (error) => {
-            Updater.execute([
-              "Произошла ошибка при установке файла",
-              {error}
-            ], { level: "err" });
+            Updater.execute(
+              ["Произошла ошибка при установке файла", { error }],
+              { level: "err" },
+            );
             reject(error);
           });
         });

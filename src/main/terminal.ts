@@ -16,9 +16,7 @@ export class Terminal extends Console {
 
   public readonly props: Required<Props>;
 
-  public constructor(
-    props?: Props,
-  ) {
+  public constructor(props?: Props) {
     super(process.stdout);
 
     this.props = {
@@ -34,7 +32,7 @@ export class Terminal extends Console {
 
   public async question(query: string): Promise<boolean> {
     const answer = await Main.read(query, { end: "" });
-    
+
     if (answer instanceof Error) {
       throw answer;
     }
@@ -44,10 +42,10 @@ export class Terminal extends Console {
 
   public async ask(query: string): Promise<string> {
     const data = await Main.read(query, { end: "" });
-    
+
     if (data instanceof Error) {
-      throw data
-    };
+      throw data;
+    }
 
     return data;
   }

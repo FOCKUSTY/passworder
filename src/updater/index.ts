@@ -3,17 +3,14 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 
-import {
-  downloadFile,
-  extractFile,
-} from "./utils";
+import { downloadFile, extractFile } from "./utils";
 
 import {
   getDownloadUrl,
   LATEST_FILE_NAME,
   RELEASE_FILE_NAME,
   RELEASE_URL,
-  VERSION_FILE_NAME
+  VERSION_FILE_NAME,
 } from "../constants";
 
 import Loggers from "../logger";
@@ -26,27 +23,37 @@ export class AutoUpdater {
   public async execute() {
     const folderPath = join(".", LATEST_FILE_NAME);
     const filePath = join(folderPath, RELEASE_FILE_NAME);
-    
+
     Updater.execute("Проверка начилия обновлений...", { level: "info" });
     Updater.execute("Поиск релиза...", { level: "info" });
-    
+
     const url = await this.fetchRelease();
     if (!url) {
       Updater.execute("Релиз не был найден", { level: "info" });
-      Updater.execute([
-        "Ошибка, релиз не был найден", {
-        url
-      }], { level: "err" });    
-      
+      Updater.execute(
+        [
+          "Ошибка, релиз не был найден",
+          {
+            url,
+          },
+        ],
+        { level: "err" },
+      );
+
       return;
-    };
+    }
 
     try {
       await this.downloadRelease(url, filePath);
       await this.extractFile(filePath);
     } catch (error) {
-      Updater.execute(["Произошла ошибки при установке или распаковки файлов", error], { level: "err" });
-      throw Updater.execute("Произошла какая-то ошибка, подробнее в логах", { level: "err" });
+      Updater.execute(
+        ["Произошла ошибки при установке или распаковки файлов", error],
+        { level: "err" },
+      );
+      throw Updater.execute("Произошла какая-то ошибка, подробнее в логах", {
+        level: "err",
+      });
     }
 
     return process.exit();
@@ -98,8 +105,10 @@ export class AutoUpdater {
             resolve(true);
           }, 1000);
         })
-        .catch(err => {
-          Updater.execute(["Произошла какая-то ошибка", {err}], { level: "err" });
+        .catch((err) => {
+          Updater.execute(["Произошла какая-то ошибка", { err }], {
+            level: "err",
+          });
           reject(err);
         });
     });

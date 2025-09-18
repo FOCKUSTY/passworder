@@ -21,13 +21,10 @@ export const FOCK_LOGGER__DIR = join(DIR_PATH, "fock-logger");
       debug: 0,
       warn: 1,
       info: 2,
-      error: 3
+      error: 3,
     },
     level: "info",
-    colors: [
-      Colors.cyan,
-      Colors.green
-    ]
+    colors: [Colors.cyan, Colors.green],
   });
 })();
 
@@ -38,23 +35,25 @@ export class Loggers {
     colors: [Colors.cyan, Colors.magenta],
     prefix: "updater",
     write: true,
-    dir: FOCK_LOGGER__DIR
+    dir: FOCK_LOGGER__DIR,
   });
-  
+
   public readonly Main = new Logger("Passworder", {
     colors: [Colors.red, Colors.magenta],
     prefix: "passworder",
     write: true,
-    dir: FOCK_LOGGER__DIR
+    dir: FOCK_LOGGER__DIR,
   });
-  
+
   public readonly Env = new Logger("Env", {
     prefix: "env",
     write: true,
-    dir: FOCK_LOGGER__DIR
+    dir: FOCK_LOGGER__DIR,
   });
 }
 
-Object.values(new Loggers()).forEach(logger => logger.execute("Приветствуем!"));
+Object.values(new Loggers()).forEach((logger) =>
+  logger.execute("Приветствуем!"),
+);
 
 export default Loggers;
