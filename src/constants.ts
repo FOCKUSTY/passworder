@@ -44,7 +44,7 @@ export const PASSWORDER_METHODS = {
   [PASSWORDER_RESPONSE.PASSWORD_GET]: "getPassword",
 } as const;
 
-export const AVAILABLE_METHODS = ["watch", "list", "delete", "change"] as const;
+export const AVAILABLE_METHODS = ["watch", "list", "delete", "change", "change-cooldown"] as const;
 export const AVAILABLE_METHODS_DESCRIPTION: Record<
   (typeof AVAILABLE_METHODS)[number],
   string
@@ -53,6 +53,7 @@ export const AVAILABLE_METHODS_DESCRIPTION: Record<
   watch: "Посмотреть конкретный сервис",
   delete: "Удалить сервис",
   change: "Изменить сервис",
+  "change-cooldown": "Изменить задержку очищения терминала"
 };
 
 export const AVAILABLE_METHODS_INDEX_OFFSET = 1;

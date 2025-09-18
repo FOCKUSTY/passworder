@@ -22,6 +22,27 @@ import {
 const GLOBAL_KEY = readFileSync(GLOBAL_FILE_PATH, "utf-8");
 const random = new Random();
 
+type File = {
+  global: string | null;
+  cooldown: number;
+  passwords: Record<
+    string,
+    Record<
+      string,
+      {
+        password: string;
+        key: string;
+      }
+    >
+  >;
+};
+
+const defaultFile: File = {
+  global: null,
+  cooldown: 5,
+  passwords: {}
+};
+
 export type WatchServiceGet =
   | {
       successed: true;
@@ -138,25 +159,16 @@ export class Passworder {
     return writeFile(join(".", LATEST_PASSWORD_FILE), password);
   }
 
-  private _file: {
-    global: string | null;
-    passwords: Record<
-      string,
-      Record<
-        string,
-        {
-          password: string;
-          key: string;
-        }
-      >
-    >;
-  };
+  private _file: File;
 
   public constructor(public readonly login: string) {
     mkdirSync(parse(MAIN_FILE_PATH).dir, { recursive: true });
 
     try {
-      this._file = JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8"));
+      this._file = {
+        ...defaultFile,
+        ...JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8"))
+      };
     } catch {
       writeFileSync(
         MAIN_FILE_PATH,
@@ -166,8 +178,21 @@ export class Passworder {
         }),
       );
 
-      this._file = JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8"));
+      this._file = {
+        ...defaultFile,
+        ...JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8"))
+      };
     }
+    
+    if (this._file.cooldown < 2) {
+      throw new Error("Задержка не может быть меньше 2 секунд");
+    }
+
+    if (this._file.cooldown > 20) {
+      throw new Error("Задержка не может быть больше 20 секунд");
+    }
+
+    this._file.cooldown = Math.floor(this._file.cooldown);
 
     if (!this._file.passwords[login]) {
       this._file.passwords[login] = {};
@@ -377,6 +402,25 @@ export class Passworder {
     };
   }
 
+  public changeCooldown(cooldown: number): true|Error {
+    if (isNaN(cooldown)) {
+      return new Error("Задержка должна быть числом");
+    }
+
+    if (cooldown < 2) {
+      return new Error("Задержка должна быть больше 2 секунд");
+    }
+
+    if (cooldown > 20) {
+      return new Error("Задержка должна быть меньше 20 секунд");
+    }
+
+    this._file.cooldown = Math.floor(cooldown);
+    this.writeFile(this._file);
+    
+    return true;
+  }
+
   public async init() {
     try {
       await Passworder.readFile();
@@ -385,6 +429,10 @@ export class Passworder {
     }
 
     return this;
+  }
+
+  public get cooldown(): number {
+    return this._file.cooldown;
   }
 
   private writeFile(file: typeof this._file) {

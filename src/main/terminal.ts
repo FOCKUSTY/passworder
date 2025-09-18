@@ -51,6 +51,14 @@ export class Terminal extends Console {
 
     return data;
   }
+
+  public set clearCooldown(cooldown: number) {
+    if (cooldown > 20) {
+      throw new Error("Задержка не может быть больше 20 секунд");
+    }
+
+    this.props.clearCooldown = cooldown * 1000;
+  }
 }
 
 export default Terminal;
