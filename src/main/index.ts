@@ -13,6 +13,8 @@ import {
 
 import { readFileSync } from "fs";
 
+import { copy } from "copy-paste";
+
 import Terminal from "./terminal";
 import Passworder, { type WatchServiceResponse } from "./passworder";
 
@@ -226,11 +228,17 @@ class User implements Methods {
   }
 
   protected async savePassword(password: string) {
-    await this.clear();
+    Passworder.writePassword(password);
+    copy(password);
+    
     this.terminal.print(
       "Мы сохранили этот пароль, как последний в " + LATEST_PASSWORD_FILE,
     );
-    return Passworder.writePassword(password);
+    this.terminal.print("Также мы скопировали Ваш пароль в буфер обмена!");
+
+    await this.clear();
+    
+    return;
   }
 
   protected async badPassword(
