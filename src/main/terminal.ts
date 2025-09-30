@@ -40,6 +40,8 @@ export class Terminal extends Console {
     return YES_ANSWERS.includes(answer);
   }
 
+  public read = Main.read;
+
   public async ask(query: string): Promise<string> {
     const data = await Main.read(query, { end: "" });
 

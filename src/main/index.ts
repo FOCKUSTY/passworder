@@ -308,12 +308,31 @@ class User implements Methods {
     this.terminal.print(
       `Мы очистим консоль через ${seconds} ${formatRussianWords(seconds, ["секунду", "секунды", "секунд"])}`,
     );
-
+    
+    let cleared = false;
+    let clearInput: NodeJS.ReadStream;
+    
     return new Promise((resolve) => {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
+        if (clearInput) {
+          clearInput.removeAllListeners();
+        }
+  
         resolve(this.terminal.clear());
       }, this.terminal.props.clearCooldown);
-    });
+  
+      this.terminal.read("Очистить сейчас? ", { end: "", listeners: (input) => ({
+        onStart() {
+          clearInput = input;
+        }
+      })}).then(() => {
+        if (cleared) return;
+
+        clearInput.removeAllListeners();
+        clearTimeout(timeout);
+        resolve(this.terminal.clear());
+      });
+    })
   }
 
   private validateMethod(
