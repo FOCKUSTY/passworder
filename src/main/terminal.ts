@@ -42,13 +42,13 @@ export class Terminal extends Console {
 
   public async read(...data: Parameters<typeof Main.read>): Promise<string> {
     const input = await Main.read(...data);
-    
+
     if (input instanceof Error) {
       throw input;
     }
 
     return input;
-  };
+  }
 
   public async ask(query: string, hide: boolean = false): Promise<string> {
     const data = hide
