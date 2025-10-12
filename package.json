@@ -17,7 +17,8 @@
     "start": "npm run build && npm run execute",
     "start:index": "npm run build && npm run execute:index",
     "start:updater": "npm run build && npm run execute:updater",
-    "start:js": "npm run build && npm run execute:js"
+    "start:js": "npm run build && npm run execute:js",
+    "dev:main": "ts-node ./src/main/index.ts"
   },
   "repository": {
     "type": "git",
@@ -45,6 +46,7 @@
     "@typescript-eslint/parser": "^8.42.0",
     "eslint": "^9.35.0",
     "pkg": "^5.8.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.42.0"
   },
