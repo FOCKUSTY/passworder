@@ -83,7 +83,6 @@ class User implements Methods {
 
   public async list() {
     const services = this.passworder.list();
-    const numberedServices = services.map((s, i) => `${+i+1}. ${s}`);
 
     if (services.length === 0) {
       this.terminal.print("Мы не смогли найти никаких сервисов...");
@@ -91,8 +90,20 @@ class User implements Methods {
       return;
     }
 
+    const servicesWithAliases = services.map((service, index) => {
+      const aliases = this.passworder.getAliases(service);
+      const stringAliases = aliases.join(", ");
+      const num = +index+1;
+
+      if (aliases.length === 0) {
+        return `${num}. ${service}`;
+      }
+
+      return `${num}. ${service}: ${stringAliases}`
+    });
+
     this.terminal.print("Вот все сервисы с установленным паролем:");
-    this.terminal.print(numberedServices.join(JOIN), { sign: false });
+    this.terminal.print(servicesWithAliases.join(JOIN), { sign: false });
 
     this.chooseMethod();
   }
@@ -160,6 +171,57 @@ class User implements Methods {
         " " +
         formatRussianWords(newCooldown, ["секунда", "секунды", "секунд"]),
     );
+
+    this.next();
+  }
+
+  public async "add-alias"() {
+    const service = await this.terminal.ask("Для какого сервиса вы хотите поставить псевдоним?");
+    const aliases = await this.terminal.ask("Введите псевдонимы для этого сервиса через запятую:");
+    
+    const array = aliases.split(",")
+    const { addedAliases, allAliases } = await this.passworder.addAliases(service, array);
+    this.terminal.print(`Псевдонимов у ${service} было добавлено: ${addedAliases.length}`);
+
+    if (addedAliases.length !== allAliases.length) {
+      const notAddedAliases = allAliases.filter(alias => !addedAliases.includes(alias))
+      
+      this.terminal.print("Псевдонимы, которые не были добавлены: " + notAddedAliases.join(", "));
+      this.terminal.print("Возможно какие-то из сервисов используют некоторые из псевдонимов:");
+      
+      const services = notAddedAliases.map(alias => <const>[alias, this.passworder.getByAlias(alias)]).filter(alias => alias[1] !== null);
+
+      this.terminal.print(services.map((s, i) => `${+i+1}. ${s.join(" — ")}`).join("\n"));
+    }
+
+    this.next();
+  }
+
+  public async "watch-aliases"() {
+    const service = await this.terminal.ask("Для какого сервиса вы хотите поставить псевдоним?");
+  
+    const alias = this.passworder.getAliases(service);
+    this.terminal.print("Вот Ваши псевдонимы у " + service);
+    this.terminal.print(alias.join(", "));
+
+    this.next();
+  }
+
+  public async "delete-alias"() {
+    const service = await this.terminal.ask("Для какого сервиса вы хотите поставить псевдоним?");
+    const alias = await this.terminal.ask("Введите псевдоним, который вы хотите удалить: ");
+
+    this.passworder.deleteAlias(service, alias);
+    this.terminal.print(`${alias} был удалён у ${service}`);
+
+    this.next();
+  }
+
+  public async "delete-aliases"() {
+    const service = await this.terminal.ask("Для какого сервиса вы хотите поставить псевдоним?");
+  
+    this.passworder.deleteServiceAliases(service);
+    this.terminal.print(`У ${service} были удалены все псевдонимы`);
 
     this.next();
   }

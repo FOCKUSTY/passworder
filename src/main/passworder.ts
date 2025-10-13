@@ -35,12 +35,17 @@ type File = {
       }
     >
   >;
+  aliases: Record<string, {
+    original: Record<string, string[]>,
+    aliases: Record<string, string>
+  }>
 };
 
 const defaultFile: File = {
   global: null,
   cooldown: 5,
   passwords: {},
+  aliases: {}
 };
 
 export type WatchServiceGet =
@@ -145,9 +150,11 @@ export class Passworder {
     return writeFile(
       MAIN_FILE_PATH,
       JSON.stringify(
-        {
+        <typeof Passworder.prototype._file>{
           global: global,
           passwords: {},
+          cooldown: 5,
+          aliases: {}
         },
         undefined,
         2,
@@ -167,14 +174,28 @@ export class Passworder {
     try {
       this._file = {
         ...defaultFile,
+        aliases: {
+          [this.login]: {
+            aliases: {},
+            original: {}
+          }
+        },
         ...JSON.parse(readFileSync(MAIN_FILE_PATH, "utf-8")),
       };
     } catch {
       writeFileSync(
         MAIN_FILE_PATH,
-        JSON.stringify({
+        JSON.stringify(<typeof Passworder.prototype._file>{
           global: null,
-          passwords: {},
+          passwords: {
+            [this.login]: {}
+          },
+          aliases: {
+            [this.login]: {
+              aliases: {},
+              original: {}
+            }
+          }
         }),
       );
 
@@ -197,6 +218,116 @@ export class Passworder {
     if (!this._file.passwords[login]) {
       this._file.passwords[login] = {};
     }
+  }
+
+  public getAliases(service: string): string[] {
+    if (!this._file.aliases[this.login]) {
+      return [];
+    }
+
+    return this._file.aliases[this.login].original[service];
+  }
+
+  public getByAlias(alias: string): string|null {
+    const aliases = this._file.aliases[this.login];
+    const value = aliases.aliases[alias];
+    
+    if (!aliases || !value) {
+      return null;
+    }
+
+    return value;
+  }
+
+  public async addAliases(service: string, aliases: string[]) {
+    if (!this._file.aliases[this.login]) {
+      this._file.aliases[this.login] = {
+        aliases: {},
+        original: {}
+      };
+    }
+
+    const original = this._file.aliases[this.login].original[service] || [];
+
+    for (const alias of aliases) {
+      if (this._file.aliases[this.login].aliases[alias]) {
+        continue;
+      }
+
+      if (!original.includes(alias)) {
+        original.push(alias);
+      }
+      
+      this._file.aliases[this.login].aliases[alias] = service;
+    }
+    
+    this._file.aliases[this.login].original[service] = original;
+    await this.writeFile(this._file);
+
+    return {
+      addedAliases: original,
+      allAliases: aliases
+    };
+  }
+
+  public addAlias(service: string, alias: string) {
+    return this.addAliases(service, [alias]);
+  };
+
+  public async deleteAlias(service: string, alias: string) {
+    const aliases = this._file.aliases[this.login];
+    if (!aliases) {
+      return this._file;
+    }
+
+    const original = aliases.original[service];
+
+    if (original.includes(alias)) {
+      const index = original.indexOf(alias);
+      this._file.aliases[this.login].original[service] = [
+        ...original.slice(0, index),
+        ...original.slice(index+1, original.length)
+      ];
+    }
+
+    delete this._file.aliases[this.login].aliases[alias];
+    await this.writeFile(this._file);
+
+    return this._file;
+  }
+
+  public async deleteServiceAliases(service: string, serviceAliases?: string[]) {
+    const aliases = serviceAliases || this._file.aliases[this.login];
+    if (!aliases) {
+      return this._file;
+    }
+
+    const allAliases = this._file.aliases[this.login].original[service] || [];
+
+    allAliases.forEach(alias => {
+      delete this._file.aliases[this.login].aliases[alias];
+    });
+
+    delete this._file.aliases[this.login].original[service];
+    await this.writeFile(this._file);
+
+    return this._file;
+  }
+
+  /**
+   * @param slug a name of service or his alias
+   */
+  public resolveServiceBySlug(slug: string): string|null {
+    if (this._file.passwords[this.login][slug]) {
+      return slug;
+    }
+
+    const alias = this._file.aliases[this.login].aliases[slug];
+    if (alias) {
+      return alias;
+    }
+
+    return null;
   }
 
   public list() {
@@ -261,25 +392,27 @@ export class Passworder {
     return encrypted;
   }
 
-  public async deleteService(service: string) {
+  public async deleteService(slug: string) {
+    const service = this.resolveServiceBySlug(slug) || slug;
     const exists = this._file.passwords[this.login][service];
 
     if (!exists) {
       return false;
     }
 
+    this.deleteServiceAliases(service);
     delete this._file.passwords[this.login][service];
-
     await this.writeFile(this._file);
 
     return true;
   }
 
   public async watchService(
-    service: string,
+    slug: string,
     password?: string,
   ): Promise<WatchServiceResponse> {
     if (!this._file.global) throw new Error("Global key is null.");
+    const service = this.resolveServiceBySlug(slug) || slug;
 
     if (!password) {
       const servicePassword = this._file.passwords[this.login][service];

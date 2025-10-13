@@ -50,6 +50,10 @@ export const AVAILABLE_METHODS = [
   "delete",
   "change",
   "change-cooldown",
+  "add-alias",
+  "watch-aliases",
+  "delete-alias",
+  "delete-aliases",
 ] as const;
 export const AVAILABLE_METHODS_DESCRIPTION: Record<
   (typeof AVAILABLE_METHODS)[number],
@@ -60,6 +64,10 @@ export const AVAILABLE_METHODS_DESCRIPTION: Record<
   delete: "Удалить сервис",
   change: "Изменить сервис",
   "change-cooldown": "Изменить задержку очищения терминала",
+  "add-alias": "Добавить псевдоним для сервиса",
+  "watch-aliases": "Посмотреть все псевдонимы у сервиса",
+  "delete-alias": "Удалить псевдоним у сервиса",
+  "delete-aliases": "Удалить все псевдонимы у сервиса"
 };
 
 export const AVAILABLE_METHODS_INDEX_OFFSET = 1;
