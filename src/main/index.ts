@@ -109,7 +109,7 @@ class User implements Methods {
     this.currentService = await this.terminal.ask(
       "Какой сервис хотите изменить? ",
     );
-    const password = await this.terminal.ask("Введите пароль: ");
+    const password = await this.terminal.ask("Введите пароль: ", true);
 
     this.changePassword({
       successed: true,
@@ -198,7 +198,7 @@ class User implements Methods {
       return this.executePassword(password);
     }
 
-    const password = await this.terminal.ask("Ну тогда вводите пароли сами: ");
+    const password = await this.terminal.ask("Ну тогда вводите пароли сами: ", true);
 
     this.passworder.addService(this.currentService, password);
     await this.savePassword(password);
@@ -263,7 +263,7 @@ class User implements Methods {
       return this.next();
     }
 
-    const key = await this.terminal.ask("Введите другой ключ шифрования: ");
+    const key = await this.terminal.ask("Введите другой ключ шифрования: ", true);
     const password = getPassword(key);
 
     if (password) {
@@ -365,7 +365,7 @@ export class Program {
     this.terminal.print("Что ж, не будем медлить!");
 
     const login = await this.terminal.ask("Введите логин: ");
-    const key = await this.terminal.ask("Введите ключ шифрования: ");
+    const key = await this.terminal.ask("Введите ключ шифрования: ", true);
 
     this.terminal.clear();
 
