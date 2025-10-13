@@ -198,7 +198,10 @@ class User implements Methods {
       return this.executePassword(password);
     }
 
-    const password = await this.terminal.ask("Ну тогда вводите пароли сами: ", true);
+    const password = await this.terminal.ask(
+      "Ну тогда вводите пароли сами: ",
+      true,
+    );
 
     this.passworder.addService(this.currentService, password);
     await this.savePassword(password);
@@ -263,7 +266,10 @@ class User implements Methods {
       return this.next();
     }
 
-    const key = await this.terminal.ask("Введите другой ключ шифрования: ", true);
+    const key = await this.terminal.ask(
+      "Введите другой ключ шифрования: ",
+      true,
+    );
     const password = getPassword(key);
 
     if (password) {

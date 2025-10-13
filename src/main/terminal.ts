@@ -39,7 +39,7 @@ export class Terminal extends Console {
 
     return input;
   }
-  
+
   public async question(query: string): Promise<boolean> {
     const answer = await this.read(query, { end: "" });
 
