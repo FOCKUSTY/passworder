@@ -30,7 +30,10 @@ export class Terminal extends Console {
   }
 
   public async read(...data: Parameters<typeof Main.read>): Promise<string> {
-    const input = await Main.read(...data);
+    const input = await Main.read(data[0], {
+      end: " ",
+      ...data[1]
+    });
 
     if (input instanceof Error) {
       throw input;
