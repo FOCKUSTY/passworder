@@ -25,9 +25,8 @@ export class Terminal extends Console {
     };
   }
 
-  public print<T>(...data: T[]): T[] {
-    Main.execute(data);
-    return data;
+  public print(...data: Parameters<typeof Main.execute>) {
+    return Main.execute(...data);
   }
 
   public async read(...data: Parameters<typeof Main.read>): Promise<string> {
@@ -41,15 +40,15 @@ export class Terminal extends Console {
   }
 
   public async question(query: string): Promise<boolean> {
-    const answer = await this.read(query, { end: "" });
+    const answer = await this.read(query, { end: " " });
 
     return YES_ANSWERS.includes(answer);
   }
 
   public async ask(query: string, hide: boolean = false): Promise<string> {
     const data = hide
-      ? await Main.readRaw(query, { end: "", hideInput: true })
-      : await Main.read(query, { end: "" });
+      ? await Main.readRaw(query, { end: " ", hideInput: true })
+      : await Main.read(query, { end: " " });
 
     if (data instanceof Error) {
       throw data;

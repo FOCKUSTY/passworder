@@ -83,6 +83,7 @@ class User implements Methods {
 
   public async list() {
     const services = this.passworder.list();
+    const numberedServices = services.map((s, i) => `${+i+1}. ${s}`);
 
     if (services.length === 0) {
       this.terminal.print("Мы не смогли найти никаких сервисов...");
@@ -91,14 +92,14 @@ class User implements Methods {
     }
 
     this.terminal.print("Вот все сервисы с установленным паролем:");
-    this.terminal.print(services.join(JOIN));
+    this.terminal.print(numberedServices.join(JOIN), { sign: false });
 
     this.chooseMethod();
   }
 
   public async watch() {
     this.currentService = await this.terminal.ask(
-      "Какой сервис Вы хотите посмотреть? ",
+      "Какой сервис Вы хотите посмотреть?",
     );
     const response = await this.passworder.watchService(this.currentService);
 
@@ -107,9 +108,9 @@ class User implements Methods {
 
   public async change() {
     this.currentService = await this.terminal.ask(
-      "Какой сервис хотите изменить? ",
+      "Какой сервис хотите изменить?",
     );
-    const password = await this.terminal.ask("Введите пароль: ", true);
+    const password = await this.terminal.ask("Введите пароль:", true);
 
     this.changePassword({
       successed: true,
@@ -120,7 +121,7 @@ class User implements Methods {
 
   public async delete() {
     this.currentService = await this.terminal.ask(
-      "Какой сервис хотите удалить? ",
+      "Какой сервис хотите удалить?",
     );
 
     const successed = await this.passworder.deleteService(this.currentService);
@@ -141,7 +142,7 @@ class User implements Methods {
     }
 
     const cooldown = await this.terminal.ask(
-      "Какую задержку вы хотите поставить? ",
+      "Какую задержку вы хотите поставить?",
     );
     const newCooldown = +cooldown;
     const successed = this.passworder.changeCooldown(newCooldown);
@@ -190,7 +191,7 @@ class User implements Methods {
 
     this.terminal.print("У этого сервиса нет установленного пароля");
     const authGeneratePassword = await this.terminal.question(
-      "Сгенерировать пароль автоматически? (Y/N) ",
+      "Сгенерировать пароль автоматически? (Y/N)",
     );
 
     if (authGeneratePassword) {
@@ -199,7 +200,7 @@ class User implements Methods {
     }
 
     const password = await this.terminal.ask(
-      "Ну тогда вводите пароли сами: ",
+      "Ну тогда вводите пароли сами:",
       true,
     );
 
@@ -251,7 +252,7 @@ class User implements Methods {
     this.terminal.print("Возможно, там используется другой ключ шифрования...");
 
     const next = await this.terminal.question(
-      "Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N) ",
+      "Быть может, Вы ошиблись буквой? Хотите попробовать ещё раз? (Y/N)",
     );
 
     if (!next) {
@@ -259,7 +260,7 @@ class User implements Methods {
     }
 
     const isGlobal = await this.terminal.question(
-      "Там точно используется глобавльный ключ шифрования? (Y/N) ",
+      "Там точно используется глобавльный ключ шифрования? (Y/N)",
     );
 
     if (isGlobal) {
@@ -267,7 +268,7 @@ class User implements Methods {
     }
 
     const key = await this.terminal.ask(
-      "Введите другой ключ шифрования: ",
+      "Введите другой ключ шифрования:",
       true,
     );
     const password = getPassword(key);
@@ -370,8 +371,8 @@ export class Program {
     );
     this.terminal.print("Что ж, не будем медлить!");
 
-    const login = await this.terminal.ask("Введите логин: ");
-    const key = await this.terminal.ask("Введите ключ шифрования: ", true);
+    const login = await this.terminal.ask("Введите логин:");
+    const key = await this.terminal.ask("Введите ключ шифрования:", true);
 
     this.terminal.clear();
 
