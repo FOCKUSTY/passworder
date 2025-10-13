@@ -36,8 +36,8 @@ type File = {
     >
   >;
   aliases: Record<string, {
-    original: Record<string, string[]>,
-    aliases: Record<string, string>
+    original: Partial<Record<string, string[]>>,
+    aliases: Partial<Record<string, string>>
   }>
 };
 
@@ -225,7 +225,7 @@ export class Passworder {
       return [];
     }
 
-    return this._file.aliases[this.login].original[service];
+    return this._file.aliases[this.login].original[service] || [];
   }
 
   public getByAlias(alias: string): string|null {
@@ -280,7 +280,7 @@ export class Passworder {
       return this._file;
     }
 
-    const original = aliases.original[service];
+    const original = aliases.original[service] || [];
 
     if (original.includes(alias)) {
       const index = original.indexOf(alias);
