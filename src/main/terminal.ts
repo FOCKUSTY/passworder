@@ -45,16 +45,14 @@ export class Terminal extends Console {
     return YES_ANSWERS.includes(answer);
   }
 
-  public async ask(query: string, hide: boolean = false): Promise<string> {
-    const data = hide
-      ? await Main.readRaw(query, { end: " ", hideInput: true })
-      : await Main.read(query, { end: " " });
+  public async ask(...data: Parameters<typeof Main.readRaw>): Promise<string> {
+    const input = await Main.readRaw(...data);
 
-    if (data instanceof Error) {
-      throw data;
+    if (input instanceof Error) {
+      throw input;
     }
 
-    return data;
+    return input;
   }
 
   public set clearCooldown(cooldown: number) {

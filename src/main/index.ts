@@ -70,7 +70,7 @@ class User implements Methods {
       "Выберите подходящий для Вас метод:" + LIST_PREFIX + methods,
     );
 
-    const inputedMethod = await this.terminal.ask("");
+    const inputedMethod = await this.terminal.ask("", { end: "" });
     const method = this.validateMethod(inputedMethod);
     if (!method) {
       this.terminal.print("Мы не нашли подходящего метода, попробуйте снова");
@@ -121,7 +121,7 @@ class User implements Methods {
     this.currentService = await this.terminal.ask(
       "Какой сервис хотите изменить?",
     );
-    const password = await this.terminal.ask("Введите пароль:", true);
+    const password = await this.terminal.ask("Введите пароль:", { hideInput: false });
 
     this.changePassword({
       successed: true,
@@ -263,7 +263,7 @@ class User implements Methods {
 
     const password = await this.terminal.ask(
       "Ну тогда вводите пароли сами:",
-      true,
+      { hideInput: true },
     );
 
     this.passworder.addService(this.currentService, password);
@@ -331,7 +331,7 @@ class User implements Methods {
 
     const key = await this.terminal.ask(
       "Введите другой ключ шифрования:",
-      true,
+      { hideInput: true },
     );
     const password = getPassword(key);
 
@@ -346,7 +346,7 @@ class User implements Methods {
 
   protected async executePassword(password: string) {
     const showPassword = await this.terminal.question(
-      "Показать пароль? (Y/N) ",
+      "Показать пароль? (Y/N)",
     );
 
     if (showPassword) {
@@ -366,7 +366,7 @@ class User implements Methods {
   }
 
   protected async next() {
-    const next = await this.terminal.question("Продолжить? (Y/N) ");
+    const next = await this.terminal.question("Продолжить? (Y/N)");
 
     return next ? this.chooseMethod() : this.exit();
   }
@@ -434,7 +434,7 @@ export class Program {
     this.terminal.print("Что ж, не будем медлить!");
 
     const login = await this.terminal.ask("Введите логин:");
-    const key = await this.terminal.ask("Введите ключ шифрования:", true);
+    const key = await this.terminal.ask("Введите ключ шифрования:", { hideInput: true });
 
     this.terminal.clear();
 
